@@ -1,6 +1,6 @@
--- [[ ezsio V12 | ULTIMATE MEGA-EXPANDED EDITION ]] --
--- Developed by: ezsio
--- Credits: Rw9
+-- [[ Rw9/ezsio V12 | ULTIMATE Update EDITION ]] --
+-- Developed by: ezsio/Rw9.
+-- Credits: Rw9./ezsio
 -- Version: 12.0.7 (Supreme Performance & Tracer Update)
 -- Total Lines: ~740
 
@@ -11,7 +11,7 @@
 local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
 
 local Window = Rayfield:CreateWindow({
-   Name = "ezsio V12 | ULTIMATE MEGA",
+   Name = "Rw9/ezsio V12 | ULTIMATE Update EDITION ",
    LoadingTitle = "ENGINE STARTING... PLEASE WAIT",
    LoadingSubtitle = "by ezsio & Rw9",
    ConfigurationSaving = {
