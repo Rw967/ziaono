@@ -1,7 +1,7 @@
 -- [[ ezsio V13 | NIGHTLY INFINITY-TERMINAL ]] --
--- Released: 07.04.2026 | 17:10 Update Build
--- Size: 650x500 | Scroll-Length: 2500+ | All-In-One UI
--- Next Major Version: 19:00 (Stay Tuned)
+-- Released: 07.04.2026 | CLEAN INFO BUILD
+-- Theme: White Glow Preparation
+-- Status: Delay Info Active
 
 local CoreGui = game:GetService("CoreGui")
 local TweenService = game:GetService("TweenService")
@@ -18,12 +18,12 @@ ScreenGui.Name = "ezsio_InfinityDash"
 ScreenGui.Parent = CoreGui
 
 -- ==========================================
--- MAIN FRAME (ULTRA WIDE & TALL)
+-- MAIN FRAME
 -- ==========================================
 local MainFrame = Instance.new("CanvasGroup")
 MainFrame.Name = "MainFrame"
 MainFrame.Parent = ScreenGui
-MainFrame.BackgroundColor3 = Color3.fromRGB(4, 4, 8) -- Deep Night Purple/Black
+MainFrame.BackgroundColor3 = Color3.fromRGB(4, 4, 8) 
 MainFrame.Position = UDim2.new(0.5, -325, 0.5, -250)
 MainFrame.Size = UDim2.new(0, 650, 0, 500)
 MainFrame.BorderSizePixel = 0
@@ -36,35 +36,21 @@ local NeonStroke = Instance.new("UIStroke", MainFrame)
 NeonStroke.Thickness = 3.5
 NeonStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
 
--- RGB Cycle (Cyan & Purple Focus)
+-- White/Cyan Pulse für das neue Design-Teasing
 task.spawn(function()
     while MainFrame.Parent do
-        for i = 0, 1, 0.002 do
-            NeonStroke.Color = Color3.fromHSV(i, 0.8, 1)
-            task.wait(0.01)
+        for i = 0, 1, 0.005 do
+            NeonStroke.Color = Color3.new(1, 1, 1):Lerp(Color3.fromRGB(0, 255, 255), i)
+            task.wait(0.02)
         end
     end
 end)
 
--- Background Particle Engine (V13 Space-Glow)
-local function CreateStar()
-    local p = Instance.new("Frame", MainFrame)
-    p.Size = UDim2.new(0, math.random(1, 3), 0, math.random(1, 3))
-    p.BackgroundColor3 = Color3.new(1, 1, 1)
-    p.Position = UDim2.new(math.random(), 0, math.random(), 0)
-    p.ZIndex = 0
-    p.BackgroundTransparency = 1
-    Instance.new("UICorner", p).CornerRadius = UDim.new(1, 0)
-    
-    TweenService:Create(p, TweenInfo.new(1.5, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut, -1, true), {BackgroundTransparency = 0.4}):Play()
-end
-for i=1, 45 do CreateStar() end
-
 -- ==========================================
--- HEADER (V13 VERSION)
+-- HEADER
 -- ==========================================
 local Title = Instance.new("TextLabel", MainFrame)
-Title.Text = "EZSIO V13 // NIGHTLY TERMINAL"
+Title.Text = "EZSIO V13 // TERMINAL INFO"
 Title.Size = UDim2.new(1, 0, 0, 80)
 Title.TextColor3 = Color3.new(1, 1, 1)
 Title.Font = Enum.Font.GothamBold
@@ -72,19 +58,18 @@ Title.TextSize = 35
 Title.BackgroundTransparency = 1
 
 -- ==========================================
--- THE MEGA SCROLL (LOADED WITH FEATURES)
+-- THE INFO SCROLL (CLEANED)
 -- ==========================================
 local Scroll = Instance.new("ScrollingFrame", MainFrame)
 Scroll.Size = UDim2.new(1, -40, 1, -170)
 Scroll.Position = UDim2.new(0, 20, 0, 90)
 Scroll.BackgroundTransparency = 1
-Scroll.CanvasSize = UDim2.new(0, 0, 0, 2600) 
+Scroll.CanvasSize = UDim2.new(0, 0, 0, 800) 
 Scroll.ScrollBarThickness = 2
-Scroll.ScrollBarImageColor3 = Color3.fromRGB(255, 255, 255)
 Scroll.ZIndex = 5
 
 local UIList = Instance.new("UIListLayout", Scroll)
-UIList.Padding = UDim.new(0, 12)
+UIList.Padding = UDim.new(0, 15)
 
 local function AddH(txt, col)
     local l = Instance.new("TextLabel", Scroll)
@@ -92,58 +77,34 @@ local function AddH(txt, col)
     l.Text = ">> " .. txt .. " <<"
     l.TextColor3 = col
     l.Font = Enum.Font.GothamBold
-    l.TextSize = 20
+    l.TextSize = 22
     l.BackgroundTransparency = 1
 end
 
-local function AddF(txt)
+local function AddInfo(txt, col)
     local l = Instance.new("TextLabel", Scroll)
-    l.Size = UDim2.new(1, -20, 0, 25)
-    l.Text = "   [+] " .. txt
-    l.TextColor3 = Color3.fromRGB(200, 200, 200)
+    l.Size = UDim2.new(1, -20, 0, 60)
+    l.Text = txt
+    l.TextColor3 = col or Color3.fromRGB(255, 255, 255)
     l.Font = Enum.Font.GothamMedium
-    l.TextSize = 14
-    l.TextXAlignment = Enum.TextXAlignment.Left
+    l.TextSize = 16
+    l.TextWrapped = true
+    l.TextXAlignment = Enum.TextXAlignment.Center
     l.BackgroundTransparency = 1
 end
 
--- --- CONTENT LOAD V13 ---
-AddH("V13 CORE UPDATES (07.04.2026)", Color3.fromRGB(0, 255, 255))
-AddF("FIXED: Infinite Jump (Hold-Mode für Dauer-Sprung)")
-AddF("IMPROVED: Aimbot Smoothing (Kein Ruckeln mehr)")
-AddF("NEW: Crosshair HUD System (Statisch & Dynamisch)")
-AddF("Kernel-Bypass Layer 8 (Safety Boost)")
-AddF("Anti-Log System: Verdeckte Ausführung")
+-- --- INFORMATION ONLY ---
 
-AddH("AIMBOT ULTIMATE V13", Color3.fromRGB(255, 80, 80))
-AddF("Elastic Tracking Engine")
-AddF("Silent Aim V5 - Auto-Prediction")
-AddF("FOV: Multi-Part Selection (Head/Torso)")
-AddF("Triggerbot: Frame-Perfect Timing")
-AddF("Wall-Check: Sichtbarkeitsprüfung aktiv")
+AddH("DESIGN UPDATE", Color3.fromRGB(255, 255, 255))
+AddInfo("DE: Das gesamte Menü wird auf ein neues 'White Glow' Design umgestellt.\nEN: The entire menu is being updated to a new 'White Glow' design.", Color3.fromRGB(200, 255, 255))
 
-AddH("VISUALS / ESP / WH", Color3.fromRGB(80, 255, 80))
-AddF("3D Box ESP: Precision Optimized")
-AddF("Skeleton ESP: Bone Mapping")
-AddF("Name, Distance & Health Indicators")
-AddF("Glow Chams: Transparent Wall-View")
-AddF("Snaplines: Target-Line Connection")
+AddH("STATUS: DELAY / VERSPÄTUNG", Color3.fromRGB(255, 50, 50))
+AddInfo("DE: Es gibt eine Verspätung beim Release. Ein genauer Zeitpunkt ist noch unklar.\nEN: There is a delay for the release. The exact time is currently unknown.", Color3.fromRGB(255, 100, 100))
 
-AddH("EXPLOIT & MOVEMENT", Color3.fromRGB(255, 200, 0))
-AddF("Flight: Pro-Glide V4 (Space/Shift Control)")
-AddF("Speedhack: Custom Walkspeed Multiplier")
-AddF("No-Clip: Ghost-Walking Mode")
-AddF("Spinbot: Defense Rotation")
+AddInfo("DE: Das Update erscheint aber definitiv noch im Laufe des heutigen Tages!\nEN: However, the update will definitely be released later today!", Color3.fromRGB(255, 255, 255))
 
-AddH("SERVER-SIDE & MISC", Color3.fromRGB(255, 0, 255))
-AddF("Server-Hop: Fast Lobby Switch")
-AddF("Infinite Yield: Bridge Interface")
-AddF("Chat-Spammer: Nightly Build Edition")
-
-AddH("NEXT RELEASE: 19:00 UHR", Color3.fromRGB(255, 255, 255))
-AddF("RAYFIELD V4 PREVIEW")
-AddF("Cloud-Configs:RAYFIELD Color White Glow ")
-AddF("Full Script-Hub: 1450+ Scripts speicherrungen..")
+AddH("STAY TUNED", Color3.fromRGB(0, 255, 0))
+AddInfo("Building V13 Ultimate... Please wait.", Color3.fromRGB(150, 150, 150))
 
 -- ==========================================
 -- PROGRESS & CLOSE
@@ -156,7 +117,7 @@ BarBg.BorderSizePixel = 0
 Instance.new("UICorner", BarBg)
 
 local BarFill = Instance.new("Frame", BarBg)
-BarFill.Size = UDim2.new(0, 0, 1, 0)
+BarFill.Size = UDim2.new(0.5, 0, 1, 0) -- Statischer Fortschritt wegen Delay
 BarFill.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
 BarFill.BorderSizePixel = 0
 Instance.new("UICorner", BarFill)
@@ -164,7 +125,7 @@ Instance.new("UICorner", BarFill)
 local Status = Instance.new("TextLabel", MainFrame)
 Status.Size = UDim2.new(1, 0, 0, 30)
 Status.Position = UDim2.new(0, 0, 1, -40)
-Status.Text = "SYSTEMS ONLINE // V13.0.1 NIGHTLY"
+Status.Text = "WAITING FOR DEPLOYMENT // DELAY ACTIVE"
 Status.TextColor3 = Color3.new(1,1,1)
 Status.Font = Enum.Font.GothamBold
 Status.TextSize = 14
@@ -180,29 +141,16 @@ Close.TextColor3 = Color3.fromRGB(255, 50, 50)
 Close.TextSize = 50
 Close.ZIndex = 100
 Close.MouseButton1Click:Connect(function()
-    TweenService:Create(MainFrame, TweenInfo.new(0.8, Enum.EasingStyle.Elastic, Enum.EasingDirection.In), {Size = UDim2.new(0,0,0,0), Rotation = 180, GroupTransparency = 1}):Play()
-    task.wait(0.8)
+    TweenService:Create(MainFrame, TweenInfo.new(0.5, Enum.EasingStyle.Back, Enum.EasingDirection.In), {Size = UDim2.new(0,0,0,0), GroupTransparency = 1}):Play()
+    task.wait(0.5)
     ScreenGui:Destroy()
 end)
 
 -- Intro Animation
 MainFrame.Size = UDim2.new(0,0,0,0)
-TweenService:Create(MainFrame, TweenInfo.new(1.2, Enum.EasingStyle.Elastic, Enum.EasingDirection.Out), {Size = UDim2.new(0, 650, 0, 500), GroupTransparency = 0}):Play()
-
--- Real-Time Progress Logic (Setzt Ziel auf 19:00 Uhr)
-task.spawn(function()
-    while MainFrame.Parent do
-        local now = os.date("*t")
-        -- Fortschritt bis 19:00 Uhr
-        local prog = math.clamp(((now.hour*3600)+(now.min*60)+now.sec) / (19*3600), 0, 0.99)
-        TweenService:Create(BarFill, TweenInfo.new(1), {Size = UDim2.new(prog, 0, 1, 0), BackgroundColor3 = Color3.fromHSV((tick()/5)%1, 0.6, 1)}):Play()
-        task.wait(1)
-    end
-end)
+TweenService:Create(MainFrame, TweenInfo.new(1, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {Size = UDim2.new(0, 650, 0, 500), GroupTransparency = 0}):Play()
 
 -- Drag System
 local d=false; local s; local sp; MainFrame.InputBegan:Connect(function(i) if i.UserInputType==Enum.UserInputType.MouseButton1 then d=true; s=i.Position; sp=MainFrame.Position end end)
 UserInputService.InputChanged:Connect(function(i) if d and i.UserInputType==Enum.UserInputType.MouseMovement then local delta=i.Position-s; MainFrame.Position=UDim2.new(sp.X.Scale,sp.X.Offset+delta.X,sp.Y.Scale,sp.Y.Offset+delta.Y) end end)
 UserInputService.InputEnded:Connect(function(i) if i.UserInputType==Enum.UserInputType.MouseButton1 then d=false end end)
-
-print("Rw9/ezsio V13 - Terminal Update Deployed.")
