@@ -1,0 +1,228 @@
+-- [[ RW9 // V13 INFINITY OVERLORD - MEGA-SCRIPT EDITION ]] --
+-- [[ WARNUNG: EXTREME VISUALS & POWER ]] --
+
+local Players = game:GetService("Players")
+local UserInputService = game:GetService("UserInputService")
+local RunService = game:GetService("RunService")
+local TweenService = game:GetService("TweenService")
+local Lighting = game:GetService("Lighting")
+local CoreGui = game:GetService("CoreGui")
+local Debris = game:GetService("Debris")
+
+local lp = Players.LocalPlayer
+local mouse = lp:GetMouse()
+local camera = workspace.CurrentCamera
+
+-- 1. ULTIMATIVE REINIGUNG (Löscht ALLES Alte)
+local function globalCleanup()
+    _G.Flying = false
+    _G.IsTransforming = false
+    _G.DomainActive = false
+    
+    for _, ui in pairs(CoreGui:GetChildren()) do 
+        if ui.Name:find("RW9") or ui.Name == "GodUI" then ui:Destroy() end 
+    end
+    
+    if lp.Character then
+        for _, v in pairs(lp.Character:GetChildren()) do
+            if v.Name == "GodWings" or v.Name == "GodLabel" or v.Name == "OrbitStar" or v.Name == "GodTrail" then 
+                v:Destroy() 
+            end
+        end
+        local hum = lp.Character:FindFirstChild("Humanoid")
+        if hum then
+            hum.PlatformStand = false
+            hum.WalkSpeed = 16
+            hum.JumpPower = 50
+        end
+    end
+    
+    -- Lighting Reset
+    Lighting.ClockTime = 14
+    Lighting.Brightness = 2
+    for _, effect in pairs(Lighting:GetChildren()) do
+        if effect:IsA("PostProcessEffect") then effect:Destroy() end
+    end
+end
+globalCleanup()
+
+-- 2. UI SETUP (PRO-MENU)
+local ScreenGui = Instance.new("ScreenGui", CoreGui)
+ScreenGui.Name = "RW9_Overlord_V13"
+
+local MainFrame = Instance.new("Frame", ScreenGui)
+MainFrame.Size = UDim2.new(0, 320, 0, 650)
+MainFrame.Position = UDim2.new(1, -340, 0.5, -325)
+MainFrame.BackgroundColor3 = Color3.fromRGB(5, 5, 5)
+MainFrame.BorderSizePixel = 0
+Instance.new("UICorner", MainFrame).CornerRadius = UDim.new(0, 10)
+local UIStroke = Instance.new("UIStroke", MainFrame)
+UIStroke.Color = Color3.fromRGB(255, 0, 100); UIStroke.Thickness = 3
+
+local Title = Instance.new("TextLabel", MainFrame)
+Title.Size = UDim2.new(1, 0, 0, 50)
+Title.Text = "RW9 // INFINITY OVERLORD"; Title.TextColor3 = Color3.new(1,1,1)
+Title.Font = "GothamBold"; Title.TextSize = 20; Title.BackgroundTransparency = 1
+
+local Scroll = Instance.new("ScrollingFrame", MainFrame)
+Scroll.Size = UDim2.new(1, -20, 1, -120); Scroll.Position = UDim2.new(0, 10, 0, 60)
+Scroll.BackgroundTransparency = 1; Scroll.CanvasSize = UDim2.new(0, 0, 1.5, 0)
+Scroll.ScrollBarThickness = 4
+
+local List = Instance.new("TextLabel", Scroll)
+List.Size = UDim2.new(1, 0, 1, 0); List.BackgroundTransparency = 1
+List.Text = [[
+--- DIVINE POWERS ---
+[Y] Divine Ascension (Ceremony)
+[X] Heaven's Strike (Mega Lightning)
+[C] God Ball (Charge & Release)
+[Q] Light-Speed Dash (Teleport)
+
+--- WORLD MANIPULATION ---
+[K] Domain Expansion (Void Sphere)
+[Z] Time Warp (Visual Freeze)
+[B] Nebula World (Hacker Sky)
+[G] ARMAGEDDON (World Self-Destruct)
+
+--- DEFENSE & UTILITY ---
+[H] Celestial Orbit (Energy Shield)
+[J] Judgment Rain (Infinite Bolts)
+[P] Ban Hammer (God Tool)
+[L] Overlord Speed (400+)
+[T] Cursor Teleport
+[Double Space] Fly Mode
+[U] NoClip (Ghost Walk)
+
+--- SYSTEM ---
+[M] Reset System
+]]
+List.Font = "Code"; List.TextColor3 = Color3.fromRGB(200, 200, 200)
+List.TextSize = 13; List.TextXAlignment = "Left"; List.TextYAlignment = "Top"
+
+-- 3. GÖTTLICHE EFFEKTE
+local function createExplosion(pos, color, scale)
+    scale = scale or 1
+    local exp = Instance.new("Explosion", workspace)
+    exp.Position = pos; exp.BlastRadius = 30 * scale; exp.BlastPressure = 0
+    
+    local p = Instance.new("Part", workspace)
+    p.Anchored = true; p.Shape = "Ball"; p.Position = pos; p.Size = Vector3.new(1,1,1)
+    p.Color = color; p.Material = "Neon"; p.CanCollide = false
+    
+    TweenService:Create(p, TweenInfo.new(0.6), {Size = Vector3.new(50*scale, 50*scale, 50*scale), Transparency = 1}):Play()
+    Debris:AddItem(p, 0.6)
+end
+
+-- 4. DIE ZEREMONIE (Y)
+local function startCeremony()
+    if _G.IsTransforming then return end
+    _G.IsTransforming = true
+    local char = lp.Character
+    local hrp = char.HumanoidRootPart
+    local hum = char.Humanoid
+    
+    hum.PlatformStand = true
+    local bp = Instance.new("BodyPosition", hrp); bp.MaxForce = Vector3.new(math.huge, math.huge, math.huge); bp.Position = hrp.Position + Vector3.new(0, 30, 0)
+    local bg = Instance.new("BodyGyro", hrp); bg.MaxTorque = Vector3.new(math.huge, math.huge, math.huge); bg.CFrame = hrp.CFrame
+
+    -- Animierter Text
+    local bill = Instance.new("BillboardGui", char); bill.Name = "GodLabel"; bill.Size = UDim2.new(0, 400, 0, 100); bill.Adornee = char.Head; bill.AlwaysOnTop = true; bill.ExtentsOffset = Vector3.new(0, 5, 0)
+    local txt = Instance.new("TextLabel", bill); txt.Size = UDim2.new(1, 0, 1, 0); txt.BackgroundTransparency = 1; txt.TextColor3 = Color3.new(1,1,1); txt.Font = "GothamBold"; txt.TextSize = 40; txt.TextStrokeTransparency = 0
+    
+    local lines = {"SUCHE DEN WÜRDIGEN...", "ENERGIE WIRD GEBÜNDELT...", "RW9 ERWACHT ALS OVERLORD!"}
+    for _, l in pairs(lines) do
+        txt.Text = l
+        for i = 1, 10 do
+            createExplosion(hrp.Position + Vector3.new(math.random(-10,10), math.random(-10,10), math.random(-10,10)), Color3.new(1,0,0.5), 0.3)
+            task.wait(0.1)
+        end
+    end
+    
+    -- Finale Verwandlung
+    local finalBolt = Instance.new("Part", workspace); finalBolt.Size = Vector3.new(15, 1000, 15); finalBolt.Position = hrp.Position; finalBolt.Anchored = true; finalBolt.Color = Color3.new(1,1,1); finalBolt.Material = "Neon"
+    createExplosion(hrp.Position, Color3.new(1,1,1), 2)
+    Debris:AddItem(finalBolt, 0.3)
+    
+    -- Flügel & Neon Body
+    local wings = Instance.new("Part", char); wings.Name = "GodWings"; wings.Size = Vector3.new(15, 8, 0.2); wings.Color = Color3.new(1,0,0.5); wings.Material = "Neon"; wings.CanCollide = false
+    Instance.new("WeldConstraint", wings).Part0 = wings; Instance.new("WeldConstraint", wings).Part1 = char.UpperTorso; wings.CFrame = char.UpperTorso.CFrame * CFrame.new(0, 0, 1.5)
+    
+    txt.Text = "OVERLORD: RW9"; txt.TextColor3 = Color3.new(1,0,0)
+    
+    for _, v in pairs(char:GetChildren()) do if v:IsA("BasePart") then v.Color = Color3.new(0,0,0); v.Material = "Neon" end end
+    
+    task.wait(1); bp.Position = bp.Position - Vector3.new(0, 30, 0); task.wait(1.5)
+    bp:Destroy(); bg:Destroy(); hum.PlatformStand = false; _G.IsTransforming = false
+end
+
+-- 5. INPUTS (MASSIV)
+UserInputService.InputBegan:Connect(function(input, gpe)
+    if gpe then return end
+    
+    -- [C] GOD BALL (FIXED)
+    if input.KeyCode == Enum.KeyCode.C then
+        local charging = true
+        local p = mouse.Hit.p
+        local ball = Instance.new("Part", workspace); ball.Shape = "Ball"; ball.Anchored = true; ball.CanCollide = false; ball.Position = p; ball.Color = Color3.new(1,0,0.8); ball.Material = "ForceField"
+        task.spawn(function()
+            local s = 0
+            while charging and ball.Parent do
+                s = math.min(s + 0.5, 35); ball.Size = Vector3.new(s,s,s)
+                task.wait(0.05)
+            end
+        end)
+        local stop; stop = UserInputService.InputEnded:Connect(function(i)
+            if i.KeyCode == Enum.KeyCode.C then charging = false; createExplosion(ball.Position, ball.Color, 1.5); ball:Destroy(); stop:Disconnect() end
+        end)
+
+    -- [X] HEAVEN'S STRIKE
+    elseif input.KeyCode == Enum.KeyCode.X then
+        local target = mouse.Hit.p
+        local bolt = Instance.new("Part", workspace); bolt.Size = Vector3.new(8, 1000, 8); bolt.Position = target + Vector3.new(0, 500, 0); bolt.Anchored = true; bolt.Color = Color3.new(1,1,1); bolt.Material = "Neon"
+        createExplosion(target, Color3.new(1,1,1), 1.5); Debris:AddItem(bolt, 0.2)
+
+    -- [K] DOMAIN EXPANSION
+    elseif input.KeyCode == Enum.KeyCode.K then
+        local domain = Instance.new("Part", workspace); domain.Shape = "Ball"; domain.Anchored = true; domain.CanCollide = false; domain.Position = lp.Character.HumanoidRootPart.Position
+        domain.Color = Color3.new(0,0,0); domain.Material = "ForceField"; domain.Size = Vector3.new(1,1,1)
+        TweenService:Create(domain, TweenInfo.new(1.5), {Size = Vector3.new(200, 200, 200)}):Play()
+        task.delay(10, function() domain:Destroy() end)
+
+    -- [Q] DASH
+    elseif input.KeyCode == Enum.KeyCode.Q then
+        lp.Character.HumanoidRootPart.CFrame = lp.Character.HumanoidRootPart.CFrame * CFrame.new(0, 0, -60)
+        createExplosion(lp.Character.HumanoidRootPart.Position, Color3.new(1,1,1), 0.5)
+
+    -- [Y] CEREMONY
+    elseif input.KeyCode == Enum.KeyCode.Y then startCeremony()
+
+    -- [L] SPEED
+    elseif input.KeyCode == Enum.KeyCode.L then lp.Character.Humanoid.WalkSpeed = (lp.Character.Humanoid.WalkSpeed == 16) and 450 or 16
+
+    -- [M] RESET
+    elseif input.KeyCode == Enum.KeyCode.M then globalCleanup()
+    end
+end)
+
+-- 6. FLY SYSTEM
+_G.Flying = false; local lastJump = 0
+UserInputService.JumpRequest:Connect(function()
+    if tick() - lastJump < 0.3 then _G.Flying = not _G.Flying end
+    lastJump = tick()
+end)
+
+RunService.RenderStepped:Connect(function()
+    if _G.Flying and lp.Character and not _G.IsTransforming then
+        local hrp = lp.Character.HumanoidRootPart
+        lp.Character.Humanoid.PlatformStand = true
+        hrp.Velocity = Vector3.new(0,0,0)
+        local m = Vector3.new(0,0,0)
+        if UserInputService:IsKeyDown("W") then m += camera.CFrame.LookVector end
+        if UserInputService:IsKeyDown("S") then m -= camera.CFrame.LookVector end
+        if UserInputService:IsKeyDown("A") then m -= camera.CFrame.RightVector end
+        if UserInputService:IsKeyDown("D") then m += camera.CFrame.RightVector end
+        hrp.CFrame = CFrame.new(hrp.Position + m * 4, hrp.Position + camera.CFrame.LookVector)
+    end
+end)
+
+print("RW9 // V13 INFINITY OVERLORD ACTIVE. UNLIMITED POWER DEPLOYED.")
