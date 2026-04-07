@@ -1,7 +1,7 @@
 local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
 
 local Window = Rayfield:CreateWindow({
-   Name = "ezsio V12 ",
+   Name = "ezsio V12",
    LoadingTitle = "ENGINE ACTIVATED by-ezsio.",
    LoadingSubtitle = "by Rw9",
    ConfigurationSaving = { Enabled = false }
@@ -12,25 +12,34 @@ local player = game.Players.LocalPlayer
 local camera = workspace.CurrentCamera
 local runService = game:GetService("RunService")
 local userInput = game:GetService("UserInputService")
+local mouse = player:GetMouse()
 
 -- SETTINGS
 _G.AimbotEnabled = false
 _G.Wallbang = false
 _G.AimPart = "Head"
 _G.Smoothing = 1
-_G.FOV = 150 -- Das wird jetzt über den Slider gesteuert
+_G.FOV = 150
 _G.WalkSpeed = 16
-_G.JumpPower = 50 -- Neu hinzugefügt
+_G.JumpPower = 50
 _G.FlySpeed = 50
 _G.Flying = false
 _G.NoClip = false
 _G.Visuals = false
 _G.ESPColor = Color3.fromRGB(255, 0, 0)
+_G.ClickTP = false
 
--- NEUE CAMERA SETTINGS
+-- CROSSHAIR SETTINGS
+_G.ShowCrosshair = false
+_G.CrosshairColor = Color3.fromRGB(255, 255, 255)
+_G.CrosshairSize = 10
+_G.CrosshairThickness = 2
+
+-- CAMERA SETTINGS
 _G.MaxZoom = 128
 _G.ForceThirdPerson = false
 
+-- DRAWING ELEMENTE
 local tracers = {}
 local fovCircle = Drawing.new("Circle")
 fovCircle.Visible = false
@@ -38,21 +47,57 @@ fovCircle.Thickness = 1
 fovCircle.Radius = _G.FOV
 fovCircle.Color = _G.ESPColor
 
+-- KLASSISCHES KREUZ ELEMENTE
+local crossLines = {
+    T = Drawing.new("Line"),
+    B = Drawing.new("Line"),
+    L = Drawing.new("Line"),
+    R = Drawing.new("Line")
+}
+
+for _, v in pairs(crossLines) do v.Visible = false v.Transparency = 1 end
+
+-- CROSSHAIR UPDATE FUNKTION (NUR KLASSISCH)
+local function updateCrosshair()
+    if not _G.ShowCrosshair then
+        for _, v in pairs(crossLines) do v.Visible = false end
+        return
+    end
+
+    local center = camera.ViewportSize / 2
+    local s = _G.CrosshairSize
+    local t = _G.CrosshairThickness
+    local c = _G.CrosshairColor
+
+    -- Oben
+    crossLines.T.From = center - Vector2.new(0, s)
+    crossLines.T.To = center - Vector2.new(0, 2)
+    -- Unten
+    crossLines.B.From = center + Vector2.new(0, s)
+    crossLines.B.To = center + Vector2.new(0, 2)
+    -- Links
+    crossLines.L.From = center - Vector2.new(s, 0)
+    crossLines.L.To = center - Vector2.new(2, 0)
+    -- Rechts
+    crossLines.R.From = center + Vector2.new(s, 0)
+    crossLines.R.To = center + Vector2.new(2, 0)
+
+    for _, v in pairs(crossLines) do
+        v.Visible = true
+        v.Color = c
+        v.Thickness = t
+    end
+end
+
 -- AIMBOT TARGET FUNKTION
 local function getClosestPlayer()
-    local target = nil
-    local dist = _G.FOV
+    local target, dist = nil, _G.FOV
     for _, v in pairs(game.Players:GetPlayers()) do
         if v ~= player and v.Character and v.Character:FindFirstChild(_G.AimPart) then
-            if not _G.Wallbang then
-                local ray = Ray.new(camera.CFrame.Position, (v.Character[_G.AimPart].Position - camera.CFrame.Position).Unit * 500)
-                local hit = workspace:FindPartOnRayWithIgnoreList(ray, {player.Character})
-                if hit and not hit:IsDescendantOf(v.Character) then continue end
-            end
             local pos, onScreen = camera:WorldToViewportPoint(v.Character[_G.AimPart].Position)
             if onScreen then
-                local magnitude = (Vector2.new(pos.X, pos.Y) - userInput:GetMouseLocation()).Magnitude
-                if magnitude < dist then dist = magnitude target = v end
+                local mag = (Vector2.new(pos.X, pos.Y) - userInput:GetMouseLocation()).Magnitude
+                if mag < dist then dist = mag target = v end
             end
         end
     end
@@ -65,158 +110,115 @@ end
 
 local AimTab = Window:CreateTab("AimBot Settings", 4483362458)
 AimTab:CreateToggle({Name = "Aimbot", CurrentValue = false, Callback = function(v) _G.AimbotEnabled = v end})
-AimTab:CreateToggle({Name = "Wallhack", CurrentValue = false, Callback = function(v) _G.Wallbang = v end})
 AimTab:CreateSlider({Name = "Aim Strength", Range = {1, 20}, Increment = 1, CurrentValue = 1, Callback = function(v) _G.Smoothing = v end})
-
--- NEU: FOV SLIDER
-AimTab:CreateSlider({
-    Name = "FOV Size", 
-    Range = {10, 800}, 
-    Increment = 10, 
-    CurrentValue = 150, 
-    Callback = function(v) 
-        _G.FOV = v 
-        fovCircle.Radius = v 
-    end
-})
+AimTab:CreateSlider({Name = "FOV Size", Range = {10, 800}, Increment = 10, CurrentValue = 150, Callback = function(v) _G.FOV = v fovCircle.Radius = v end})
 AimTab:CreateToggle({Name = "Show FOV", CurrentValue = false, Callback = function(v) fovCircle.Visible = v end})
 
+AimTab:CreateSection("Classic Crosshair")
+AimTab:CreateToggle({Name = "Fadenkreuz Aktivieren", CurrentValue = false, Callback = function(v) _G.ShowCrosshair = v end})
+AimTab:CreateColorPicker({Name = "Farbe", Color = _G.CrosshairColor, Callback = function(v) _G.CrosshairColor = v end})
+AimTab:CreateSlider({Name = "Größe (Länge)", Range = {5, 100}, Increment = 1, CurrentValue = 10, Callback = function(v) _G.CrosshairSize = v end})
+AimTab:CreateSlider({Name = "Dicke (Breite)", Range = {1, 10}, Increment = 1, CurrentValue = 2, Callback = function(v) _G.CrosshairThickness = v end})
+
 local MoveTab = Window:CreateTab("Movement", 4483362458)
-MoveTab:CreateToggle({
-    Name = "Fly V3",
-    CurrentValue = false,
-    Callback = function(v)
-        _G.Flying = v
-        if player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
-            local root = player.Character.HumanoidRootPart
-            if v then
-                local bg = Instance.new("BodyGyro", root); bg.Name = "FlyGyro"; bg.P = 9e4; bg.MaxTorque = Vector3.new(9e9, 9e9, 9e9); bg.CFrame = root.CFrame
-                local bv = Instance.new("BodyVelocity", root); bv.Name = "FlyVelocity"; bv.Velocity = Vector3.new(0,0,0); bv.MaxForce = Vector3.new(9e9, 9e9, 9e9)
-                player.Character.Humanoid.PlatformStand = true
-            else
-                if root:FindFirstChild("FlyGyro") then root.FlyGyro:Destroy() end
-                if root:FindFirstChild("FlyVelocity") then root.FlyVelocity:Destroy() end
-                player.Character.Humanoid.PlatformStand = false
-            end
+MoveTab:CreateSlider({Name = "Walkspeed", Range = {16, 500}, Increment = 1, CurrentValue = 16, Callback = function(v) _G.WalkSpeed = v end})
+MoveTab:CreateSlider({Name = "Jump Power", Range = {50, 500}, Increment = 5, CurrentValue = 50, Callback = function(v) _G.JumpPower = v end})
+MoveTab:CreateToggle({Name = "NoClip", CurrentValue = false, Callback = function(v) _G.NoClip = v end})
+MoveTab:CreateToggle({Name = "Fly V3", CurrentValue = false, Callback = function(v)
+    _G.Flying = v
+    if player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+        local root = player.Character.HumanoidRootPart
+        if v then
+            local bg = Instance.new("BodyGyro", root); bg.Name = "FlyGyro"; bg.P = 9e4; bg.MaxTorque = Vector3.new(9e9, 9e9, 9e9); bg.CFrame = root.CFrame
+            local bv = Instance.new("BodyVelocity", root); bv.Name = "FlyVelocity"; bv.MaxForce = Vector3.new(9e9, 9e9, 9e9)
+            player.Character.Humanoid.PlatformStand = true
+        else
+            if root:FindFirstChild("FlyGyro") then root.FlyGyro:Destroy() end
+            if root:FindFirstChild("FlyVelocity") then root.FlyVelocity:Destroy() end
+            player.Character.Humanoid.PlatformStand = false
         end
     end
-})
-MoveTab:CreateSlider({Name = "Fly Speed", Range = {10, 500}, Increment = 5, CurrentValue = 50, Callback = function(v) _G.FlySpeed = v end})
-MoveTab:CreateSlider({Name = "Walkspeed", Range = {16, 500}, Increment = 1, CurrentValue = 16, Callback = function(v) _G.WalkSpeed = v end})
+end})
 
--- NEU: JUMP POWER SLIDER
-MoveTab:CreateSlider({
-    Name = "Jump Power", 
-    Range = {50, 500}, 
-    Increment = 5, 
-    CurrentValue = 50, 
-    Callback = function(v) 
-        _G.JumpPower = v 
-    end
-})
-MoveTab:CreateToggle({Name = "NoClip", CurrentValue = false, Callback = function(v) _G.NoClip = v end})
-
--- NEUER CAMERA TAB
 local CamTab = Window:CreateTab("Camera", 4483362458)
-CamTab:CreateSlider({
-   Name = "Max Zoom Distance",
-   Range = {128, 10000},
-   Increment = 50,
-   CurrentValue = 128,
-   Callback = function(v)
-       _G.MaxZoom = v
-       player.CameraMaxZoomDistance = v
-   end
-})
-
-CamTab:CreateToggle({
-   Name = "Unlock Ego-View (3rd Person)",
-   CurrentValue = false,
-   Callback = function(v)
-       _G.ForceThirdPerson = v
-       if not v then
-           player.CameraMode = Enum.CameraMode.Classic
-       end
-   end
-})
+CamTab:CreateSlider({Name = "Max Zoom Distance", Range = {128, 10000}, Increment = 50, CurrentValue = 128, Callback = function(v) _G.MaxZoom = v end})
+CamTab:CreateToggle({Name = "Unlock Ego-View (3rd Person)", CurrentValue = false, Callback = function(v) _G.ForceThirdPerson = v end})
 
 local TPTab = Window:CreateTab("Teleport", 4483362458)
 TPTab:CreateInput({Name = "Player Name", PlaceholderText = "Search...", Callback = function(t) _G.SelectedPlayer = t end})
 TPTab:CreateButton({Name = "TP to Player", Callback = function()
-   for _, v in pairs(game.Players:GetPlayers()) do
-       if v.Name:lower():find(_G.SelectedPlayer:lower()) and v.Character then
-           player.Character.HumanoidRootPart.CFrame = v.Character.HumanoidRootPart.CFrame * CFrame.new(0, 0, 3)
-       end
-   end
+    for _, v in pairs(game.Players:GetPlayers()) do
+        if v.Name:lower():find(_G.SelectedPlayer:lower()) and v.Character then
+            player.Character.HumanoidRootPart.CFrame = v.Character.HumanoidRootPart.CFrame * CFrame.new(0, 0, 3)
+        end
+    end
 end})
+TPTab:CreateSection("Click-to-Teleport")
+TPTab:CreateToggle({Name = "STRG + Klick TP", CurrentValue = false, Callback = function(v) _G.ClickTP = v end})
+TPTab:CreateParagraph({Title = "Anleitung", Content = "Aktiviere den Schalter oben. Halte dann die STRG-Taste auf deiner Tastatur gedrückt und mache einen Linksklick auf den Boden, um dich dorthin zu teleportieren."})
 
 local VisualTab = Window:CreateTab("Visuals", 4483345998)
 VisualTab:CreateToggle({Name = "ESP & Tracers", CurrentValue = false, Callback = function(v) _G.Visuals = v end})
-VisualTab:CreateColorPicker({Name = "Color", Color = _G.ESPColor, Callback = function(v) _G.ESPColor = v fovCircle.Color = v end})
+VisualTab:CreateColorPicker({Name = "Farbe", Color = _G.ESPColor, Callback = function(v) _G.ESPColor = v fovCircle.Color = v end})
 
 -- ==========================================
 -- MAIN ENGINE
 -- ==========================================
 runService.RenderStepped:Connect(function()
-   fovCircle.Position = userInput:GetMouseLocation()
-   
-   -- CAMERA HACKS
-   player.CameraMaxZoomDistance = _G.MaxZoom
-   if _G.ForceThirdPerson then
-       player.CameraMode = Enum.CameraMode.Classic
-       if player.CameraMinZoomDistance < 0.5 then
-           player.CameraMinZoomDistance = 5
-       end
-   end
+    fovCircle.Position = userInput:GetMouseLocation()
+    updateCrosshair()
 
-   -- AIMBOT
-   if _G.AimbotEnabled and userInput:IsMouseButtonPressed(Enum.UserInputType.MouseButton2) then
-       local t = getClosestPlayer()
-       if t then camera.CFrame = camera.CFrame:Lerp(CFrame.new(camera.CFrame.Position, t.Character[_G.AimPart].Position), 1/_G.Smoothing) end
-   end
+    -- Camera
+    player.CameraMaxZoomDistance = _G.MaxZoom
+    if _G.ForceThirdPerson then
+        player.CameraMode = Enum.CameraMode.Classic
+        if player.CameraMinZoomDistance < 5 then player.CameraMinZoomDistance = 5 end
+    else
+        player.CameraMinZoomDistance = 0.5
+    end
 
-   -- MOVEMENT
-   if player.Character and player.Character:FindFirstChild("Humanoid") then
-       if not _G.Flying then 
-           player.Character.Humanoid.WalkSpeed = _G.WalkSpeed 
-           player.Character.Humanoid.JumpPower = _G.JumpPower -- Sprungkraft anwenden
-       end
-       if _G.NoClip then for _, p in pairs(player.Character:GetDescendants()) do if p:IsA("BasePart") then p.CanCollide = false end end end
-   end
+    -- Aimbot
+    if _G.AimbotEnabled and userInput:IsMouseButtonPressed(Enum.UserInputType.MouseButton2) then
+        local t = getClosestPlayer()
+        if t then camera.CFrame = camera.CFrame:Lerp(CFrame.new(camera.CFrame.Position, t.Character[_G.AimPart].Position), 1/_G.Smoothing) end
+    end
 
-   -- FLY V3 ENGINE
-   if _G.Flying and player.Character and player.Character.HumanoidRootPart:FindFirstChild("FlyVelocity") then
-       local root = player.Character.HumanoidRootPart
-       local bv = root.FlyVelocity
-       local bg = root.FlyGyro
-       local direction = Vector3.new(0,0,0)
-       if userInput:IsKeyDown(Enum.KeyCode.W) then direction = direction + camera.CFrame.LookVector end
-       if userInput:IsKeyDown(Enum.KeyCode.S) then direction = direction - camera.CFrame.LookVector end
-       if userInput:IsKeyDown(Enum.KeyCode.A) then direction = direction - camera.CFrame.RightVector end
-       if userInput:IsKeyDown(Enum.KeyCode.D) then direction = direction + camera.CFrame.RightVector end
-       bv.Velocity = direction * _G.FlySpeed
-       bg.CFrame = camera.CFrame
-   end
+    -- Movement
+    if player.Character and player.Character:FindFirstChild("Humanoid") then
+        if not _G.Flying then 
+            player.Character.Humanoid.WalkSpeed = _G.WalkSpeed 
+            player.Character.Humanoid.JumpPower = _G.JumpPower
+        end
+        if _G.NoClip then for _, p in pairs(player.Character:GetDescendants()) do if p:IsA("BasePart") then p.CanCollide = false end end end
+    end
 
-   -- VISUALS
-   if _G.Visuals then
-       for _, p in pairs(game.Players:GetPlayers()) do
-           if p ~= player and p.Character and p.Character:FindFirstChild("HumanoidRootPart") then
-               local h = p.Character:FindFirstChild("ESP_H") or Instance.new("Highlight", p.Character)
-               h.Name = "ESP_H"; h.FillColor = _G.ESPColor; h.Enabled = true
-               local pos, onScreen = camera:WorldToViewportPoint(p.Character.HumanoidRootPart.Position)
-               if onScreen then
-                   if not tracers[p.Name] then tracers[p.Name] = Drawing.new("Line") end
-                   tracers[p.Name].Visible = true; tracers[p.Name].From = Vector2.new(camera.ViewportSize.X/2, camera.ViewportSize.Y); tracers[p.Name].To = Vector2.new(pos.X, pos.Y); tracers[p.Name].Color = _G.ESPColor
-               else if tracers[p.Name] then tracers[p.Name].Visible = false end end
-           end
-       end
-   else
-       for _, t in pairs(tracers) do t.Visible = false end
-       for _, p in pairs(game.Players:GetPlayers()) do
-           if p.Character and p.Character:FindFirstChild("ESP_H") then
-               p.Character.ESP_H:Destroy()
-           end
-       end
-   end
+    -- ESP
+    if _G.Visuals then
+        for _, p in pairs(game.Players:GetPlayers()) do
+            if p ~= player and p.Character and p.Character:FindFirstChild("HumanoidRootPart") then
+                local h = p.Character:FindFirstChild("ESP_H") or Instance.new("Highlight", p.Character)
+                h.Name = "ESP_H"; h.FillColor = _G.ESPColor; h.Enabled = true
+                local pos, onScreen = camera:WorldToViewportPoint(p.Character.HumanoidRootPart.Position)
+                if onScreen then
+                    if not tracers[p.Name] then tracers[p.Name] = Drawing.new("Line") end
+                    tracers[p.Name].Visible = true; tracers[p.Name].From = Vector2.new(camera.ViewportSize.X/2, camera.ViewportSize.Y); tracers[p.Name].To = Vector2.new(pos.X, pos.Y); tracers[p.Name].Color = _G.ESPColor
+                else if tracers[p.Name] then tracers[p.Name].Visible = false end end
+            end
+        end
+    else
+        for _, t in pairs(tracers) do t.Visible = false end
+        for _, p in pairs(game.Players:GetPlayers()) do
+            if p.Character and p.Character:FindFirstChild("ESP_H") then p.Character.ESP_H:Destroy() end
+        end
+    end
+end)
+
+-- CLICK TP LOGIK
+userInput.InputBegan:Connect(function(input, processed)
+    if processed or not _G.ClickTP then return end
+    if input.UserInputType == Enum.UserInputType.MouseButton1 and userInput:IsKeyDown(Enum.KeyCode.LeftControl) then
+        local ray = camera:ViewportPointToRay(mouse.X, mouse.Y)
+        local result = workspace:Raycast(ray.Origin, ray.Direction * 1000)
+        if result and player.Character then player.Character:MoveTo(result.Position + Vector3.new(0,3,0)) end
+    end
 end)
