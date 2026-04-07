@@ -1,5 +1,4 @@
--- [[ RW9 // ULTIMATE STIFF FLY V3 ]] --
--- Fokus: Null Animationen, absolute Steifheit, Fly V3 Logik
+-- [[ RW9 // ULTIMATE STIFF FLY V3 + EXIT ]] --
 
 local Players = game:GetService("Players")
 local CoreGui = game:GetService("CoreGui")
@@ -9,16 +8,16 @@ local RunService = game:GetService("RunService")
 local player = Players.LocalPlayer
 local camera = workspace.CurrentCamera
 
--- Cleanup
-if CoreGui:FindFirstChild("RW9_StiffFlyV3") then CoreGui.RW9_StiffFlyV3:Destroy() end
+-- Cleanup alter Versionen vor dem Start
+if CoreGui:FindFirstChild("RW9_FinalFly") then CoreGui.RW9_FinalFly:Destroy() end
 
 -- --- UI SETUP ---
 local ScreenGui = Instance.new("ScreenGui", CoreGui)
-ScreenGui.Name = "RW9_StiffFlyV3"
+ScreenGui.Name = "RW9_FinalFly"
 
 local MainFrame = Instance.new("Frame", ScreenGui)
-MainFrame.Size = UDim2.new(0, 220, 0, 110)
-MainFrame.Position = UDim2.new(0.5, -110, 0.5, -55)
+MainFrame.Size = UDim2.new(0, 220, 0, 150) -- Etwas höher für den Exit-Button
+MainFrame.Position = UDim2.new(0.5, -110, 0.5, -75)
 MainFrame.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
 MainFrame.BorderSizePixel = 0
 MainFrame.Active = true
@@ -28,15 +27,16 @@ Instance.new("UIStroke", MainFrame).Color = Color3.fromRGB(220, 220, 220)
 
 local Title = Instance.new("TextLabel", MainFrame)
 Title.Size = UDim2.new(1, 0, 0, 40)
-Title.Text = "RW9 // ULTRA STIFF"
+Title.Text = "RW9 // TERMINAL"
 Title.Font = Enum.Font.GothamBold
 Title.TextColor3 = Color3.fromRGB(40, 40, 40)
 Title.BackgroundTransparency = 1
 Title.TextSize = 14
 
+-- TOGGLE BUTTON
 local ToggleBtn = Instance.new("TextButton", MainFrame)
-ToggleBtn.Size = UDim2.new(0, 180, 0, 45)
-ToggleBtn.Position = UDim2.new(0.5, -90, 0.5, -5)
+ToggleBtn.Size = UDim2.new(0, 180, 0, 40)
+ToggleBtn.Position = UDim2.new(0.5, -90, 0, 45)
 ToggleBtn.BackgroundColor3 = Color3.fromRGB(245, 245, 245)
 ToggleBtn.Text = "FLY: OFF"
 ToggleBtn.Font = Enum.Font.GothamMedium
@@ -44,18 +44,37 @@ ToggleBtn.TextColor3 = Color3.fromRGB(120, 120, 120)
 ToggleBtn.TextSize = 13
 Instance.new("UICorner", ToggleBtn).CornerRadius = UDim.new(0, 8)
 
+-- EXIT BUTTON
+local ExitBtn = Instance.new("TextButton", MainFrame)
+ExitBtn.Size = UDim2.new(0, 180, 0, 35)
+ExitBtn.Position = UDim2.new(0.5, -90, 0, 95)
+ExitBtn.BackgroundColor3 = Color3.fromRGB(255, 200, 200) -- Leichtes Rot
+ExitBtn.Text = "DESTROY SCRIPT"
+ExitBtn.Font = Enum.Font.GothamBold
+ExitBtn.TextColor3 = Color3.fromRGB(150, 50, 50)
+ExitBtn.TextSize = 11
+Instance.new("UICorner", ExitBtn).CornerRadius = UDim.new(0, 8)
+
 -- --- ENGINE ---
 local flying = false
-local speed = 60
+local speed = 65
 local bv, bg
+local connection -- Speichert die Loop-Verbindung
 
--- Funktion um alle Animationen zu killen
 local function stopAnimations(char)
     local humanoid = char:FindFirstChildOfClass("Humanoid")
     if humanoid then
-        for _, anim in pairs(humanoid:GetPlayingAnimationTracks()) do
-            anim:Stop()
-        end
+        for _, anim in pairs(humanoid:GetPlayingAnimationTracks()) do anim:Stop() end
+    end
+end
+
+local function disableFly()
+    flying = false
+    if bv then bv:Destroy() end
+    if bg then bg:Destroy() end
+    local char = player.Character
+    if char and char:FindFirstChildOfClass("Humanoid") then
+        char:FindFirstChildOfClass("Humanoid").PlatformStand = false
     end
 end
 
@@ -65,11 +84,10 @@ ToggleBtn.MouseButton1Click:Connect(function()
     local hrp = char and char:FindFirstChild("HumanoidRootPart")
     
     if flying and hrp then
-        ToggleBtn.Text = "FLY: ACTIVE (STIFF)"
+        ToggleBtn.Text = "FLY: ACTIVE"
         ToggleBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
         ToggleBtn.TextColor3 = Color3.new(1, 1, 1)
 
-        -- Fly V3 Körper-Physik
         bv = Instance.new("BodyVelocity", hrp)
         bv.MaxForce = Vector3.new(math.huge, math.huge, math.huge)
         bv.Velocity = Vector3.new(0, 0, 0)
@@ -78,34 +96,31 @@ ToggleBtn.MouseButton1Click:Connect(function()
         bg.MaxTorque = Vector3.new(math.huge, math.huge, math.huge)
         bg.P = 20000 
         bg.CFrame = hrp.CFrame
-        
-        -- Animationen stoppen
         stopAnimations(char)
     else
         ToggleBtn.Text = "FLY: OFF"
         ToggleBtn.BackgroundColor3 = Color3.fromRGB(245, 245, 245)
         ToggleBtn.TextColor3 = Color3.fromRGB(120, 120, 120)
-        
-        if bv then bv:Destroy() end
-        if bg then bg:Destroy() end
-        if char and char:FindFirstChildOfClass("Humanoid") then
-            char:FindFirstChildOfClass("Humanoid").PlatformStand = false
-        end
+        disableFly()
     end
 end)
 
-RunService.RenderStepped:Connect(function()
+-- DESTROY LOGIC
+ExitBtn.MouseButton1Click:Connect(function()
+    disableFly() -- Flug stoppen
+    if connection then connection:Disconnect() end -- Loop beenden
+    ScreenGui:Destroy() -- UI löschen
+    print("RW9 Script destroyed successfully.")
+end)
+
+connection = RunService.RenderStepped:Connect(function()
     if flying and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
         local hrp = player.Character.HumanoidRootPart
         local hum = player.Character:FindFirstChildOfClass("Humanoid")
         
-        -- Jedes Frame Animationen killen und PlatformStand erzwingen
         if hum then 
             hum.PlatformStand = true 
-            -- Verhindert, dass neue Animationen (z.B. Fallen) starten
-            for _, anim in pairs(hum:GetPlayingAnimationTracks()) do
-                anim:Stop()
-            end
+            for _, anim in pairs(hum:GetPlayingAnimationTracks()) do anim:Stop() end
         end
         
         bg.CFrame = camera.CFrame
@@ -118,10 +133,6 @@ RunService.RenderStepped:Connect(function()
         if UserInputService:IsKeyDown(Enum.KeyCode.Space) then moveDir += Vector3.new(0, 1, 0) end
         if UserInputService:IsKeyDown(Enum.KeyCode.LeftShift) then moveDir -= Vector3.new(0, 1, 0) end
         
-        if moveDir.Magnitude > 0 then
-            bv.Velocity = moveDir.Unit * speed
-        else
-            bv.Velocity = Vector3.new(0, 0, 0)
-        end
+        bv.Velocity = (moveDir.Magnitude > 0) and (moveDir.Unit * speed) or Vector3.new(0, 0, 0)
     end
 end)
