@@ -1,0 +1,150 @@
+-- [[ RW9 // VISION - X-RAY & ESP ]] --
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local CoreGui = game:GetService("CoreGui")
+local LocalPlayer = Players.LocalPlayer
+
+-- UI Cleanup
+if CoreGui:FindFirstChild("RW9_ESP_UI") then CoreGui.RW9_ESP_UI:Destroy() end
+
+-- --- SETTINGS ---
+_G.RW9_Chams = false
+_G.RW9_Tracers = false
+_G.RW9_Names = false
+
+-- --- UI SETUP (Clean White) ---
+local ScreenGui = Instance.new("ScreenGui", CoreGui)
+ScreenGui.Name = "RW9_ESP_UI"
+
+local MainFrame = Instance.new("Frame", ScreenGui)
+MainFrame.Size = UDim2.new(0, 220, 0, 230)
+MainFrame.Position = UDim2.new(0.1, 0, 0.5, -115)
+MainFrame.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+MainFrame.BorderSizePixel = 0
+MainFrame.Active = true
+MainFrame.Draggable = true
+Instance.new("UICorner", MainFrame).CornerRadius = UDim.new(0, 12)
+Instance.new("UIStroke", MainFrame).Color = Color3.fromRGB(220, 220, 220)
+
+local Title = Instance.new("TextLabel", MainFrame)
+Title.Size = UDim2.new(1, 0, 0, 45)
+Title.Text = "RW9 // VISION"
+Title.Font = Enum.Font.GothamBold
+Title.TextColor3 = Color3.fromRGB(30, 30, 30)
+Title.BackgroundTransparency = 1
+Title.TextSize = 15
+
+-- Button Creator
+local function CreateBtn(text, pos, callback)
+    local btn = Instance.new("TextButton", MainFrame)
+    btn.Size = UDim2.new(0, 180, 0, 35)
+    btn.Position = UDim2.new(0.5, -90, 0, pos)
+    btn.BackgroundColor3 = Color3.fromRGB(245, 245, 245)
+    btn.Text = text .. ": OFF"
+    btn.Font = Enum.Font.GothamMedium
+    btn.TextColor3 = Color3.fromRGB(120, 120, 120)
+    btn.TextSize = 12
+    Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 8)
+    
+    local active = false
+    btn.MouseButton1Click:Connect(function()
+        active = not active
+        btn.Text = text .. (active and ": ON" or ": OFF")
+        btn.BackgroundColor3 = active and Color3.fromRGB(255, 70, 70) or Color3.fromRGB(245, 245, 245)
+        btn.TextColor3 = active and Color3.new(1, 1, 1) or Color3.fromRGB(120, 120, 120)
+        callback(active)
+    end)
+end
+
+CreateBtn("PLAYER GLOW (RED)", 55, function(v) _G.RW9_Chams = v end)
+CreateBtn("TRACER LINES", 95, function(v) _G.RW9_Tracers = v end)
+CreateBtn("NAMES & DIST", 135, function(v) _G.RW9_Names = v end)
+
+local Exit = Instance.new("TextButton", MainFrame)
+Exit.Size = UDim2.new(0, 180, 0, 30)
+Exit.Position = UDim2.new(0.5, -90, 0, 185)
+Exit.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+Exit.Text = "CLOSE TERMINAL"
+Exit.Font = Enum.Font.GothamBold
+Exit.TextColor3 = Color3.new(1, 1, 1)
+Exit.TextSize = 10
+Instance.new("UICorner", Exit).CornerRadius = UDim.new(0, 8)
+Exit.MouseButton1Click:Connect(function() ScreenGui:Destroy() _G.RW9_Chams = false _G.RW9_Tracers = false _G.RW9_Names = false end)
+
+-- --- ESP & CHAMS LOGIC ---
+local chamsCache = {}
+local drawingCache = {}
+
+local function setupESP(player)
+    if player == LocalPlayer then return end
+    
+    -- Highlighter für das Aufleuchten (Chams)
+    local highlight = Instance.new("Highlight")
+    highlight.Name = "RW9_Highlight"
+    highlight.FillColor = Color3.fromRGB(255, 0, 0) -- Rot
+    highlight.OutlineColor = Color3.new(1, 1, 1)
+    highlight.FillTransparency = 0.5
+    highlight.OutlineTransparency = 0
+    highlight.Enabled = false
+    chamsCache[player] = highlight
+    
+    -- Drawings für Tracer und Namen
+    local tracer = Drawing.new("Line")
+    tracer.Thickness = 1
+    tracer.Color = Color3.fromRGB(255, 0, 0)
+    
+    local name = Drawing.new("Text")
+    name.Size = 16
+    name.Center = true
+    name.Outline = true
+    name.Color = Color3.new(1, 1, 1)
+    
+    drawingCache[player] = {Tracer = tracer, Name = name}
+end
+
+RunService.RenderStepped:Connect(function()
+    for _, player in pairs(Players:GetPlayers()) do
+        if player ~= LocalPlayer and player.Character then
+            local char = player.Character
+            local hrp = char:FindFirstChild("HumanoidRootPart")
+            
+            -- Chams Logic (Leuchten)
+            if chamsCache[player] then
+                chamsCache[player].Parent = char
+                chamsCache[player].Enabled = _G.RW9_Chams
+            end
+            
+            -- Drawing Logic (Tracer/Names)
+            if hrp and drawingCache[player] then
+                local pos, onScreen = workspace.CurrentCamera:WorldToViewportPoint(hrp.Position)
+                local drawings = drawingCache[player]
+                
+                if onScreen then
+                    -- Tracers
+                    drawings.Tracer.Visible = _G.RW9_Tracers
+                    drawings.Tracer.From = Vector2.new(workspace.CurrentCamera.ViewportSize.X / 2, workspace.CurrentCamera.ViewportSize.Y)
+                    drawings.Tracer.To = Vector2.new(pos.X, pos.Y)
+                    
+                    -- Names & Distance
+                    if _G.RW9_Names then
+                        local dist = math.floor((LocalPlayer.Character.HumanoidRootPart.Position - hrp.Position).Magnitude)
+                        drawings.Name.Visible = true
+                        drawings.Name.Text = player.Name .. " [" .. dist .. "m]"
+                        drawings.Name.Position = Vector2.new(pos.X, pos.Y - 40)
+                    else
+                        drawings.Name.Visible = false
+                    end
+                else
+                    drawings.Tracer.Visible = false
+                    drawings.Name.Visible = false
+                end
+            end
+        end
+    end
+end)
+
+-- Initialisierung
+for _, p in pairs(Players:GetPlayers()) do setupESP(p) end
+Players.PlayerAdded:Connect(setupESP)
+
+print("RW9 // VISION LOADED")
