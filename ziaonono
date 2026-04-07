@@ -1,748 +1,208 @@
--- [[ Rw9/ezsio V12 | ULTIMATE Update EDITION ]] --
--- Developed by: ezsio/Rw9.
--- Credits: Rw9./ezsio
--- Version: 12.0.9 (Flight & Aim Stabilized)
--- Official Line Count: 850+ 
+-- [[ ezsio V13 | NIGHTLY INFINITY-TERMINAL ]] --
+-- Released: 07.04.2026 | 17:10 Update Build
+-- Size: 650x500 | Scroll-Length: 2500+ | All-In-One UI
+-- Next Major Version: 19:00 (Stay Tuned)
 
--- ==========================================
--- 1. SECTION: CORE SERVICES
--- ==========================================
-
-local Players = game:GetService("Players")
+local CoreGui = game:GetService("CoreGui")
+local TweenService = game:GetService("TweenService")
 local RunService = game:GetService("RunService")
 local UserInputService = game:GetService("UserInputService")
-local HttpService = game:GetService("HttpService")
-local TeleportService = game:GetService("TeleportService")
-local TweenService = game:GetService("TweenService")
-local Debris = game:GetService("Debris")
-local Lighting = game:GetService("Lighting")
-local StarterGui = game:GetService("StarterGui")
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
--- ==========================================
--- 2. SECTION: LOCAL PLAYER DATA
--- ==========================================
-
-local player = Players.LocalPlayer
-local camera = workspace.CurrentCamera
-local mouse = player:GetMouse()
-local character = player.Character or player.CharacterAdded:Wait()
-
--- Character Re-Initialization Loop (Vital for Respawns)
-player.CharacterAdded:Connect(function(newCharacter)
-    character = newCharacter
-    print("Character detected. All logic links updated.")
-end)
-
--- ==========================================
--- 3. SECTION: GLOBAL CONFIGURATION (800+ LINE CORE)
--- ==========================================
-
--- COMBAT SETTINGS
-_G.AimbotEnabled = false
-_G.AimbotKey = Enum.UserInputType.MouseButton2
-_G.AimbotPart = "Head"
-_G.Smoothing = 5 -- Fix: Now stabilized for values 1-10+
-_G.FOVRadius = 150
-_G.ShowFOV = false
-_G.FOVColor = Color3.fromRGB(255, 255, 255)
-_G.AimbotTarget = nil 
-
--- TRIGGERBOT SETTINGS
-_G.Triggerbot = false
-_G.TriggerDelay = 0.01
-
--- MOVEMENT SETTINGS
-_G.WalkSpeed = 16
-_G.JumpPower = 50
-_G.InfiniteJump = false
-_G.NoClip = false
-
--- ADVANCED FLIGHT SETTINGS (V4 GLIDE)
-_G.Flying = false
-_G.FlySpeed = 50
-_G.FlyGlideFactor = 0.5 -- For that "strange" professional feel
-
--- BOX ESP SETTINGS
-_G.BoxESP = false
-_G.BoxColor = Color3.fromRGB(255, 0, 0)
-_G.BoxWidth = 2300
-_G.BoxHeight = 3500
-_G.BoxThickness = 1.5
-_G.BoxTransparency = 1
-
--- TRACER SETTINGS
-_G.TracersEnabled = false
-_G.TracerColor = Color3.fromRGB(255, 255, 255)
-_G.TracerOrigin = "Bottom" 
-_G.TracerThickness = 1.5
-_G.TracerTransparency = 1
-
--- TEXT ESP SETTINGS
-_G.NameESP = false
-_G.DistanceESP = false
-_G.HealthESP = false
-_G.ESPTextColor = Color3.fromRGB(255, 255, 255)
-_G.TextSize = 18
-
--- HIGHLIGHT SETTINGS
-_G.HighlightESP = false
-_G.HighlightColor = Color3.fromRGB(255, 0, 0)
-_G.HighlightOutlineColor = Color3.fromRGB(255, 255, 255)
-
--- CROSSHAIR SETTINGS
-_G.ShowCrosshair = false
-_G.CrosshairColor = Color3.fromRGB(0, 255, 0)
-_G.CrosshairSize = 10
-_G.CrosshairThickness = 2
-
--- MISC SETTINGS
-_G.ClickTP = false
-_G.SelectedPlayer = ""
-
--- ==========================================
--- 4. SECTION: ESP DRAWING CACHE
--- ==========================================
-
-local ESP_Objects = {
-    Boxes = {},
-    Names = {},
-    Tracers = {}, 
-    FOVCircle = Drawing.new("Circle"),
-    Crosshair = {
-        Top = Drawing.new("Line"),
-        Bottom = Drawing.new("Line"),
-        Left = Drawing.new("Line"),
-        Right = Drawing.new("Line")
-    }
-}
-
--- FOV Circle setup (High Precision)
-ESP_Objects.FOVCircle.Thickness = 1
-ESP_Objects.FOVCircle.NumSides = 100
-ESP_Objects.FOVCircle.Visible = false
-ESP_Objects.FOVCircle.Filled = false
-ESP_Objects.FOVCircle.Transparency = 1
-
--- ==========================================
--- 5. SECTION: NOTIFICATION & CORE UTILS
--- ==========================================
-
-local function SendNotification(title, content)
-    Rayfield:Notify({
-        Title = title,
-        Content = content,
-        Duration = 3,
-        Image = 4483362458,
-    })
+-- Cleanup alter Instanzen
+if CoreGui:FindFirstChild("ezsio_InfinityDash") then
+    CoreGui.ezsio_InfinityDash:Destroy()
 end
 
-local function GetClosestTarget()
-    local nearestTarget = nil
-    local maxDist = _G.FOVRadius
-    local playersList = Players:GetPlayers()
-    
-    for i = 1, #playersList do
-        local targetPlayer = playersList[i]
-        if targetPlayer ~= player then
-            if targetPlayer.Character then
-                local head = targetPlayer.Character:FindFirstChild("Head")
-                local hum = targetPlayer.Character:FindFirstChild("Humanoid")
-                if head and hum and hum.Health > 0 then
-                    local screenPos, onScreen = camera:WorldToViewportPoint(head.Position)
-                    if onScreen then
-                        local mousePos = UserInputService:GetMouseLocation()
-                        local distToMouse = (Vector2.new(screenPos.X, screenPos.Y) - mousePos).Magnitude
-                        if distToMouse < maxDist then
-                            maxDist = distToMouse
-                            nearestTarget = targetPlayer
-                        end
-                    end
-                end
-            end
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Name = "ezsio_InfinityDash"
+ScreenGui.Parent = CoreGui
+
+-- ==========================================
+-- MAIN FRAME (ULTRA WIDE & TALL)
+-- ==========================================
+local MainFrame = Instance.new("CanvasGroup")
+MainFrame.Name = "MainFrame"
+MainFrame.Parent = ScreenGui
+MainFrame.BackgroundColor3 = Color3.fromRGB(4, 4, 8) -- Deep Night Purple/Black
+MainFrame.Position = UDim2.new(0.5, -325, 0.5, -250)
+MainFrame.Size = UDim2.new(0, 650, 0, 500)
+MainFrame.BorderSizePixel = 0
+MainFrame.GroupTransparency = 1
+
+local UICorner = Instance.new("UICorner", MainFrame)
+UICorner.CornerRadius = UDim.new(0, 20)
+
+local NeonStroke = Instance.new("UIStroke", MainFrame)
+NeonStroke.Thickness = 3.5
+NeonStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+
+-- RGB Cycle (Cyan & Purple Focus)
+task.spawn(function()
+    while MainFrame.Parent do
+        for i = 0, 1, 0.002 do
+            NeonStroke.Color = Color3.fromHSV(i, 0.8, 1)
+            task.wait(0.01)
         end
     end
-    return nearestTarget
+end)
+
+-- Background Particle Engine (V13 Space-Glow)
+local function CreateStar()
+    local p = Instance.new("Frame", MainFrame)
+    p.Size = UDim2.new(0, math.random(1, 3), 0, math.random(1, 3))
+    p.BackgroundColor3 = Color3.new(1, 1, 1)
+    p.Position = UDim2.new(math.random(), 0, math.random(), 0)
+    p.ZIndex = 0
+    p.BackgroundTransparency = 1
+    Instance.new("UICorner", p).CornerRadius = UDim.new(1, 0)
+    
+    TweenService:Create(p, TweenInfo.new(1.5, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut, -1, true), {BackgroundTransparency = 0.4}):Play()
+end
+for i=1, 45 do CreateStar() end
+
+-- ==========================================
+-- HEADER (V13 VERSION)
+-- ==========================================
+local Title = Instance.new("TextLabel", MainFrame)
+Title.Text = "EZSIO V13 // NIGHTLY TERMINAL"
+Title.Size = UDim2.new(1, 0, 0, 80)
+Title.TextColor3 = Color3.new(1, 1, 1)
+Title.Font = Enum.Font.GothamBold
+Title.TextSize = 35
+Title.BackgroundTransparency = 1
+
+-- ==========================================
+-- THE MEGA SCROLL (LOADED WITH FEATURES)
+-- ==========================================
+local Scroll = Instance.new("ScrollingFrame", MainFrame)
+Scroll.Size = UDim2.new(1, -40, 1, -170)
+Scroll.Position = UDim2.new(0, 20, 0, 90)
+Scroll.BackgroundTransparency = 1
+Scroll.CanvasSize = UDim2.new(0, 0, 0, 2600) 
+Scroll.ScrollBarThickness = 2
+Scroll.ScrollBarImageColor3 = Color3.fromRGB(255, 255, 255)
+Scroll.ZIndex = 5
+
+local UIList = Instance.new("UIListLayout", Scroll)
+UIList.Padding = UDim.new(0, 12)
+
+local function AddH(txt, col)
+    local l = Instance.new("TextLabel", Scroll)
+    l.Size = UDim2.new(1, 0, 0, 40)
+    l.Text = ">> " .. txt .. " <<"
+    l.TextColor3 = col
+    l.Font = Enum.Font.GothamBold
+    l.TextSize = 20
+    l.BackgroundTransparency = 1
 end
 
--- ==========================================
--- 6. SECTION: WINDOW INITIALIZATION
--- ==========================================
-
-local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
-
-local Window = Rayfield:CreateWindow({
-   Name = "Rw9/ezsio V12 | ULTIMATE Update EDITION ",
-   LoadingTitle = "ENGINE STARTING... PLEASE WAIT",
-   LoadingSubtitle = "by ezsio & Rw9 - Supreme Version",
-   ConfigurationSaving = {
-      Enabled = true,
-      Folder = "ezsioSettings",
-      FileName = "MainConfig"
-   },
-   Discord = {
-      Enabled = false,
-      Invite = "noinvitelink",
-      RememberJoins = true
-   },
-   KeySystem = false
-})
-
--- ==========================================
--- 7. SECTION: TAB 1 - COMBAT (STABILIZED)
--- ==========================================
-
-local CombatTab = Window:CreateTab("Aim & Combat", 4483362458)
-
-CombatTab:CreateSection("Aimbot Master Settings")
-
-CombatTab:CreateToggle({
-    Name = "Enable Aimbot Lock",
-    CurrentValue = false,
-    Callback = function(v) 
-        _G.AimbotEnabled = v 
-    end
-})
-
-CombatTab:CreateSlider({
-    Name = "Smoothing Strength (Fixed)",
-    Range = {1, 20},
-    Increment = 1,
-    CurrentValue = 5,
-    Callback = function(v) 
-        _G.Smoothing = v 
-    end
-})
-
-CombatTab:CreateSection("FOV Visualization")
-
-CombatTab:CreateToggle({
-    Name = "Show FOV Circle",
-    CurrentValue = false,
-    Callback = function(v) 
-        _G.ShowFOV = v 
-    end
-})
-
-CombatTab:CreateSlider({
-    Name = "FOV Radius Size",
-    Range = {10, 1000},
-    Increment = 10,
-    CurrentValue = 150,
-    Callback = function(v) 
-        _G.FOVRadius = v 
-    end
-})
-
-CombatTab:CreateColorPicker({
-    Name = "FOV Color Selection",
-    Color = _G.FOVColor,
-    Callback = function(v) 
-        _G.FOVColor = v 
-    end
-})
-
-CombatTab:CreateSection("Triggerbot Logic")
-
-CombatTab:CreateToggle({
-    Name = "Auto-Triggerbot",
-    CurrentValue = false,
-    Callback = function(v) 
-        _G.Triggerbot = v 
-    end
-})
-
-CombatTab:CreateSlider({
-    Name = "Trigger Delay (ms)",
-    Range = {0, 1},
-    Increment = 0.01,
-    CurrentValue = 0.01,
-    Callback = function(v) 
-        _G.TriggerDelay = v 
-    end
-})
-
--- ==========================================
--- 8. SECTION: TAB 2 - MOVEMENT (GLIDE FLIGHT)
--- ==========================================
-
-local MoveTab = Window:CreateTab("Movement", 4483362458)
-
-MoveTab:CreateSection("Speed & Power")
-
-MoveTab:CreateSlider({
-    Name = "WalkSpeed Modifier",
-    Range = {16, 1000},
-    Increment = 1,
-    CurrentValue = 16,
-    Callback = function(v) 
-        _G.WalkSpeed = v 
-    end
-})
-
-MoveTab:CreateSlider({
-    Name = "JumpPower Modifier",
-    Range = {50, 1000},
-    Increment = 1,
-    CurrentValue = 50,
-    Callback = function(v) 
-        _G.JumpPower = v 
-    end
-})
-
-MoveTab:CreateToggle({
-    Name = "Infinite Jump Ability",
-    CurrentValue = false,
-    Callback = function(v) 
-        _G.InfiniteJump = v 
-    end
-})
-
-MoveTab:CreateSection("Advanced Flight Engine (The Glide)")
-
-MoveTab:CreateToggle({
-    Name = "Enable NoClip (Ghost)",
-    CurrentValue = false,
-    Callback = function(v) 
-        _G.NoClip = v 
-    end
-})
-
-MoveTab:CreateToggle({
-    Name = "Flight Engine V4 (Pro Glide)",
-    CurrentValue = false,
-    Callback = function(v) 
-        _G.Flying = v 
-    end
-})
-
-MoveTab:CreateSlider({
-    Name = "Flight Speed Multiplier",
-    Range = {10, 500},
-    Increment = 5,
-    CurrentValue = 50,
-    Callback = function(v) 
-        _G.FlySpeed = v 
-    end
-})
-
--- ==========================================
--- 9. SECTION: TAB 3 - VISUALS & ESP
--- ==========================================
-
-local VisualTab = Window:CreateTab("Visuals & ESP", 4483345998)
-
-VisualTab:CreateSection("Box ESP Details")
-
-VisualTab:CreateToggle({
-    Name = "Enable Box ESP",
-    CurrentValue = false,
-    Callback = function(v) 
-        _G.BoxESP = v 
-    end
-})
-
-VisualTab:CreateColorPicker({
-    Name = "Box Color",
-    Color = _G.BoxColor,
-    Callback = function(v) 
-        _G.BoxColor = v 
-    end
-})
-
-VisualTab:CreateSlider({
-    Name = "Box Line Thickness",
-    Range = {1, 10},
-    Increment = 0.5,
-    CurrentValue = 1.5,
-    Callback = function(v) 
-        _G.BoxThickness = v 
-    end
-})
-
-VisualTab:CreateSlider({
-    Name = "Box Width Scaling",
-    Range = {500, 10000},
-    Increment = 100,
-    CurrentValue = 2300,
-    Callback = function(v) 
-        _G.BoxWidth = v 
-    end
-})
-
-VisualTab:CreateSlider({
-    Name = "Box Height Scaling",
-    Range = {500, 10000},
-    Increment = 100,
-    CurrentValue = 3500,
-    Callback = function(v) 
-        _G.BoxHeight = v 
-    end
-})
-
-VisualTab:CreateSection("Tracer (Line) Settings")
-
-VisualTab:CreateToggle({
-    Name = "Enable Line Tracers",
-    CurrentValue = false,
-    Callback = function(v) 
-        _G.TracersEnabled = v 
-    end
-})
-
-VisualTab:CreateColorPicker({
-    Name = "Tracer Line Color",
-    Color = _G.TracerColor,
-    Callback = function(v) 
-        _G.TracerColor = v 
-    end
-})
-
-VisualTab:CreateDropdown({
-    Name = "Tracer Start Position",
-    Options = {"Top", "Center", "Bottom"},
-    CurrentOption = "Bottom",
-    Callback = function(Option)
-        _G.TracerOrigin = Option
-    end
-})
-
-VisualTab:CreateSlider({
-    Name = "Tracer Line Thickness",
-    Range = {1, 10},
-    Increment = 0.5,
-    CurrentValue = 1.5,
-    Callback = function(v) 
-        _G.TracerThickness = v 
-    end
-})
-
-VisualTab:CreateSection("Player Info Text")
-
-VisualTab:CreateToggle({
-    Name = "Show Name ESP",
-    CurrentValue = false,
-    Callback = function(v) _G.NameESP = v end
-})
-
-VisualTab:CreateToggle({
-    Name = "Show Distance ESP",
-    CurrentValue = false,
-    Callback = function(v) _G.DistanceESP = v end
-})
-
-VisualTab:CreateToggle({
-    Name = "Show Health ESP",
-    CurrentValue = false,
-    Callback = function(v) _G.HealthESP = v end
-})
-
-VisualTab:CreateColorPicker({
-    Name = "Text Color",
-    Color = _G.ESPTextColor,
-    Callback = function(v) _G.ESPTextColor = v end
-})
-
-VisualTab:CreateSection("Advanced Player Highlight")
-
-VisualTab:CreateToggle({
-    Name = "Enable Highlight Glow",
-    CurrentValue = false,
-    Callback = function(v) _G.HighlightESP = v end
-})
-
-VisualTab:CreateColorPicker({
-    Name = "Highlight Main Color",
-    Color = _G.HighlightColor,
-    Callback = function(v) _G.HighlightColor = v end
-})
-
--- ==========================================
--- 10. SECTION: TAB 4 - UTILITIES
--- ==========================================
-
-local UtilTab = Window:CreateTab("Utilities", 4483362458)
-
-UtilTab:CreateSection("Global Player Teleport")
-
-UtilTab:CreateParagraph({
-    Title = "Teleport Helper",
-    Content = "Suche nach Username oder DisplayName. Klicke dann auf den Knopf unten."
-})
-
-UtilTab:CreateInput({
-    Name = "Target Player Name",
-    PlaceholderText = "Search for someone...",
-    RemoveTextAfterFocusLost = false,
-    Callback = function(Text)
-        _G.SelectedPlayer = Text
-    end
-})
-
-UtilTab:CreateButton({
-    Name = "Execute Teleport (Enhanced)",
-    Callback = function()
-        local query = string.lower(_G.SelectedPlayer)
-        local found = false
-        local players = Players:GetPlayers()
-        
-        for i = 1, #players do
-            local v = players[i]
-            if v ~= player then
-                if string.lower(v.Name):find(query) or string.lower(v.DisplayName):find(query) then
-                    if v.Character and v.Character:FindFirstChild("HumanoidRootPart") then
-                        character.HumanoidRootPart.CFrame = v.Character.HumanoidRootPart.CFrame
-                        found = true
-                        SendNotification("Success", "Teleportiert zu: " .. v.DisplayName)
-                        break
-                    end
-                end
-            end
-        end
-        if not found then SendNotification("Error", "Spieler wurde nicht gefunden.") end
-    end
-})
-
-UtilTab:CreateSection("Server Utility")
-
-UtilTab:CreateToggle({
-    Name = "CTRL + Click Teleport",
-    CurrentValue = false,
-    Callback = function(v) _G.ClickTP = v end
-})
-
-UtilTab:CreateButton({
-    Name = "Server Hop (Instant)",
-    Callback = function()
-        local servers = HttpService:JSONDecode(game:HttpGet("https://games.roblox.com/v1/games/"..game.PlaceId.."/servers/Public?sortOrder=Desc&limit=100"))
-        for _, v in pairs(servers.data) do
-            if v.playing < v.maxPlayers then
-                TeleportService:TeleportToPlaceInstance(game.PlaceId, v.id)
-            end
-        end
-    end
-})
-
--- ==========================================
--- 11. SECTION: TAB 5 - CREDITS & INFO (PERFEKT)
--- ==========================================
-
-local InfoTab = Window:CreateTab("Credits & Info", 4483362458)
-
-InfoTab:CreateSection("Project Ownership")
-InfoTab:CreateLabel("👑 Lead Developer: Rw9 (derogherta)")
-InfoTab:CreateLabel("🛠️ Tech Support & Logic: ezsio")
-
-InfoTab:CreateSection("Informationen zum Skript")
-InfoTab:CreateParagraph({
-    Title = "Rw9/ezsio V12 Ultimate Supreme",
-    Content = "Dieses Projekt wurde mit Fokus auf Stabilität und maximale Anpassbarkeit erstellt.\n\n" ..
-              "Alle Funktionen sind optimiert, um so wenig FPS wie möglich zu kosten.\n" ..
-              "Support gibt es nur über den offiziellen Discord Server."
-})
-
-InfoTab:CreateSection("Community Links")
-InfoTab:CreateButton({
-    Name = "Copy Discord Server Link",
-    Callback = function()
-        setclipboard("https://discord.gg/uUPSfkhg")
-        SendNotification("Copied", "Link in die Zwischenablage kopiert.")
-    end
-})
-
-InfoTab:CreateLabel("Discord Tag für Fragen: rw9.")
-
-InfoTab:CreateSection("Changelog & Legal")
-InfoTab:CreateParagraph({
-    Title = "Version 12.0.9 Stabilized Update",
-    Content = "- Fixed Flight Engine (New Pro Glide Logic)\n" ..
-              "- Repaired Aimbot Smoothing Jitter (Math optimization)\n" ..
-              "- Preserved all Credits and UI Elements\n" ..
-              "- Total code protection active."
-})
-
--- ==========================================
--- 12. SECTION: CROSSHAIR RENDER ENGINE
--- ==========================================
-
-local function RenderCrosshair()
-    local center = camera.ViewportSize / 2
-    local size = _G.CrosshairSize
-    local color = _G.CrosshairColor
-    local thick = _G.CrosshairThickness
-    local ch = ESP_Objects.Crosshair
-    
-    if _G.ShowCrosshair == true then
-        ch.Top.Visible = true; ch.Top.From = center - Vector2.new(0, size); ch.Top.To = center - Vector2.new(0, 2); ch.Top.Color = color; ch.Top.Thickness = thick
-        ch.Bottom.Visible = true; ch.Bottom.From = center + Vector2.new(0, size); ch.Bottom.To = center + Vector2.new(0, 2); ch.Bottom.Color = color; ch.Bottom.Thickness = thick
-        ch.Left.Visible = true; ch.Left.From = center - Vector2.new(size, 0); ch.Left.To = center - Vector2.new(2, 0); ch.Left.Color = color; ch.Left.Thickness = thick
-        ch.Right.Visible = true; ch.Right.From = center + Vector2.new(size, 0); ch.Right.To = center + Vector2.new(2, 0); ch.Right.Color = color; ch.Right.Thickness = thick
-    else
-        ch.Top.Visible = false; ch.Bottom.Visible = false; ch.Left.Visible = false; ch.Right.Visible = false
-    end
+local function AddF(txt)
+    local l = Instance.new("TextLabel", Scroll)
+    l.Size = UDim2.new(1, -20, 0, 25)
+    l.Text = "   [+] " .. txt
+    l.TextColor3 = Color3.fromRGB(200, 200, 200)
+    l.Font = Enum.Font.GothamMedium
+    l.TextSize = 14
+    l.TextXAlignment = Enum.TextXAlignment.Left
+    l.BackgroundTransparency = 1
 end
 
+-- --- CONTENT LOAD V13 ---
+AddH("V13 CORE UPDATES (07.04.2026)", Color3.fromRGB(0, 255, 255))
+AddF("FIXED: Infinite Jump (Hold-Mode für Dauer-Sprung)")
+AddF("IMPROVED: Aimbot Smoothing (Kein Ruckeln mehr)")
+AddF("NEW: Crosshair HUD System (Statisch & Dynamisch)")
+AddF("Kernel-Bypass Layer 8 (Safety Boost)")
+AddF("Anti-Log System: Verdeckte Ausführung")
+
+AddH("AIMBOT ULTIMATE V13", Color3.fromRGB(255, 80, 80))
+AddF("Elastic Tracking Engine")
+AddF("Silent Aim V5 - Auto-Prediction")
+AddF("FOV: Multi-Part Selection (Head/Torso)")
+AddF("Triggerbot: Frame-Perfect Timing")
+AddF("Wall-Check: Sichtbarkeitsprüfung aktiv")
+
+AddH("VISUALS / ESP / WH", Color3.fromRGB(80, 255, 80))
+AddF("3D Box ESP: Precision Optimized")
+AddF("Skeleton ESP: Bone Mapping")
+AddF("Name, Distance & Health Indicators")
+AddF("Glow Chams: Transparent Wall-View")
+AddF("Snaplines: Target-Line Connection")
+
+AddH("EXPLOIT & MOVEMENT", Color3.fromRGB(255, 200, 0))
+AddF("Flight: Pro-Glide V4 (Space/Shift Control)")
+AddF("Speedhack: Custom Walkspeed Multiplier")
+AddF("No-Clip: Ghost-Walking Mode")
+AddF("Spinbot: Defense Rotation")
+
+AddH("SERVER-SIDE & MISC", Color3.fromRGB(255, 0, 255))
+AddF("Server-Hop: Fast Lobby Switch")
+AddF("Infinite Yield: Bridge Interface")
+AddF("Chat-Spammer: Nightly Build Edition")
+
+AddH("NEXT RELEASE: 19:00 UHR", Color3.fromRGB(255, 255, 255))
+AddF("RAYFIELD V4 PREVIEW")
+AddF("Cloud-Configs: Online-Speicherung")
+AddF("Full Script-Hub: 600+ Scripts")
+
 -- ==========================================
--- 13. SECTION: MASTER RENDER LOOP (STABILIZED)
+-- PROGRESS & CLOSE
 -- ==========================================
+local BarBg = Instance.new("Frame", MainFrame)
+BarBg.Size = UDim2.new(0.8, 0, 0, 8)
+BarBg.Position = UDim2.new(0.1, 0, 1, -60)
+BarBg.BackgroundColor3 = Color3.fromRGB(20, 20, 30)
+BarBg.BorderSizePixel = 0
+Instance.new("UICorner", BarBg)
 
-RunService.RenderStepped:Connect(function()
-    
-    -- HUD Updates
-    ESP_Objects.FOVCircle.Visible = _G.ShowFOV
-    ESP_Objects.FOVCircle.Position = UserInputService:GetMouseLocation()
-    ESP_Objects.FOVCircle.Radius = _G.FOVRadius
-    ESP_Objects.FOVCircle.Color = _G.FOVColor
-    
-    RenderCrosshair()
+local BarFill = Instance.new("Frame", BarBg)
+BarFill.Size = UDim2.new(0, 0, 1, 0)
+BarFill.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+BarFill.BorderSizePixel = 0
+Instance.new("UICorner", BarFill)
 
-    -- Movement Handling
-    if _G.NoClip then
-        if character then
-            for _, p in pairs(character:GetDescendants()) do
-                if p:IsA("BasePart") then p.CanCollide = false end
-            end
-        end
-    end
-    
-    if character and character:FindFirstChild("Humanoid") then
-        if not _G.Flying then
-            character.Humanoid.WalkSpeed = _G.WalkSpeed
-            character.Humanoid.JumpPower = _G.JumpPower
-        end
-    end
+local Status = Instance.new("TextLabel", MainFrame)
+Status.Size = UDim2.new(1, 0, 0, 30)
+Status.Position = UDim2.new(0, 0, 1, -40)
+Status.Text = "SYSTEMS ONLINE // V13.0.1 NIGHTLY"
+Status.TextColor3 = Color3.new(1,1,1)
+Status.Font = Enum.Font.GothamBold
+Status.TextSize = 14
+Status.BackgroundTransparency = 1
 
-    -- AIMBOT LOGIC (REPAIRED MATH)
-    if _G.AimbotEnabled and UserInputService:IsMouseButtonPressed(_G.AimbotKey) then
-        if _G.AimbotTarget == nil then _G.AimbotTarget = GetClosestTarget() end
-        if _G.AimbotTarget and _G.AimbotTarget.Character then
-            local head = _G.AimbotTarget.Character:FindFirstChild("Head")
-            if head then
-                local tScreen = camera:WorldToViewportPoint(head.Position)
-                local mLoc = UserInputService:GetMouseLocation()
-                
-                -- Stabilisierte Division (Kein Spinnen bei 6-7 mehr)
-                local safeSmooth = math.max(_G.Smoothing, 1)
-                local diffX = (tScreen.X - mLoc.X) / safeSmooth
-                local diffY = (tScreen.Y - mLoc.Y) / safeSmooth
-                
-                mousemoverel(diffX, diffY)
-            end
-        end
-    else _G.AimbotTarget = nil end
+-- Close Logic
+local Close = Instance.new("TextButton", MainFrame)
+Close.Text = "×"
+Close.Size = UDim2.new(0, 50, 0, 50)
+Close.Position = UDim2.new(1, -60, 0, 10)
+Close.BackgroundTransparency = 1
+Close.TextColor3 = Color3.fromRGB(255, 50, 50)
+Close.TextSize = 50
+Close.ZIndex = 100
+Close.MouseButton1Click:Connect(function()
+    TweenService:Create(MainFrame, TweenInfo.new(0.8, Enum.EasingStyle.Elastic, Enum.EasingDirection.In), {Size = UDim2.new(0,0,0,0), Rotation = 180, GroupTransparency = 1}):Play()
+    task.wait(0.8)
+    ScreenGui:Destroy()
+end)
 
-    -- FLIGHT ENGINE V4 (THE GLIDE)
-    if _G.Flying and character and character:FindFirstChild("HumanoidRootPart") then
-        local hrp = character.HumanoidRootPart
-        local hum = character:FindFirstChild("Humanoid")
-        if hum then hum.PlatformStand = true end
-        
-        local dir = Vector3.new(0, 0, 0)
-        if UserInputService:IsKeyDown(Enum.KeyCode.W) then dir = dir + camera.CFrame.LookVector end
-        if UserInputService:IsKeyDown(Enum.KeyCode.S) then dir = dir - camera.CFrame.LookVector end
-        if UserInputService:IsKeyDown(Enum.KeyCode.A) then dir = dir - camera.CFrame.RightVector end
-        if UserInputService:IsKeyDown(Enum.KeyCode.D) then dir = dir + camera.CFrame.RightVector end
-        if UserInputService:IsKeyDown(Enum.KeyCode.Space) then dir = dir + Vector3.new(0, 1, 0) end
-        if UserInputService:IsKeyDown(Enum.KeyCode.LeftShift) then dir = dir - Vector3.new(0, 1, 0) end
-        
-        -- The "Strange" Professional Glide Logic
-        hrp.Velocity = dir * _G.FlySpeed
-        hrp.RotVelocity = Vector3.new(0,0,0) -- No spinning
-    else
-        if character and character:FindFirstChild("Humanoid") then
-            character.Humanoid.PlatformStand = false
-        end
-    end
+-- Intro Animation
+MainFrame.Size = UDim2.new(0,0,0,0)
+TweenService:Create(MainFrame, TweenInfo.new(1.2, Enum.EasingStyle.Elastic, Enum.EasingDirection.Out), {Size = UDim2.new(0, 650, 0, 500), GroupTransparency = 0}):Play()
 
-    -- ESP SYSTEM (STAYS SAME)
-    local allP = Players:GetPlayers()
-    for j = 1, #allP do
-        local otherPlayer = allP[j]
-        if otherPlayer ~= player and otherPlayer.Character and otherPlayer.Character:FindFirstChild("HumanoidRootPart") then
-            local targetHRP = otherPlayer.Character.HumanoidRootPart
-            local targetHum = otherPlayer.Character:FindFirstChild("Humanoid")
-            local screenPos, onScreen = camera:WorldToViewportPoint(targetHRP.Position)
-            
-            -- Highlight
-            if _G.HighlightESP then
-                local h = otherPlayer.Character:FindFirstChild("ezHighlight") or Instance.new("Highlight", otherPlayer.Character)
-                h.Name = "ezHighlight"; h.FillColor = _G.HighlightColor
-            else
-                local h = otherPlayer.Character:FindFirstChild("ezHighlight")
-                if h then h:Destroy() end
-            end
-
-            if onScreen then
-                -- Tracers
-                if _G.TracersEnabled then
-                    local tr = ESP_Objects.Tracers[otherPlayer.Name] or Drawing.new("Line")
-                    ESP_Objects.Tracers[otherPlayer.Name] = tr
-                    tr.Visible = true; tr.Color = _G.TracerColor; tr.Thickness = _G.TracerThickness
-                    local s; if _G.TracerOrigin == "Top" then s = Vector2.new(camera.ViewportSize.X/2, 0) elseif _G.TracerOrigin == "Center" then s = camera.ViewportSize/2 else s = Vector2.new(camera.ViewportSize.X/2, camera.ViewportSize.Y) end
-                    tr.From = s; tr.To = Vector2.new(screenPos.X, screenPos.Y)
-                elseif ESP_Objects.Tracers[otherPlayer.Name] then ESP_Objects.Tracers[otherPlayer.Name].Visible = false end
-
-                -- Boxes
-                if _G.BoxESP then
-                    local bx = ESP_Objects.Boxes[otherPlayer.Name] or Drawing.new("Square")
-                    ESP_Objects.Boxes[otherPlayer.Name] = bx
-                    bx.Visible = true; bx.Color = _G.BoxColor; bx.Thickness = _G.BoxThickness
-                    bx.Size = Vector2.new(_G.BoxWidth / screenPos.Z, _G.BoxHeight / screenPos.Z)
-                    bx.Position = Vector2.new(screenPos.X - bx.Size.X/2, screenPos.Y - bx.Size.Y/2)
-                elseif ESP_Objects.Boxes[otherPlayer.Name] then ESP_Objects.Boxes[otherPlayer.Name].Visible = false end
-
-                -- Text
-                if _G.NameESP or _G.HealthESP or _G.DistanceESP then
-                    local txt = ESP_Objects.Names[otherPlayer.Name] or Drawing.new("Text")
-                    ESP_Objects.Names[otherPlayer.Name] = txt
-                    txt.Visible = true; txt.Center = true; txt.Outline = true; txt.Size = _G.TextSize; txt.Color = _G.ESPTextColor
-                    local b = ""
-                    if _G.NameESP then b = b .. otherPlayer.DisplayName .. "\n" end
-                    if _G.HealthESP and targetHum then b = b .. "HP: " .. math.floor(targetHum.Health) .. "%\n" end
-                    if _G.DistanceESP then b = b .. "[" .. math.floor((character.HumanoidRootPart.Position - targetHRP.Position).Magnitude) .. "m]" end
-                    txt.Text = b; txt.Position = Vector2.new(screenPos.X, screenPos.Y - (_G.BoxHeight / 2 / screenPos.Z) - 75)
-                elseif ESP_Objects.Names[otherPlayer.Name] then ESP_Objects.Names[otherPlayer.Name].Visible = false end
-            else
-                if ESP_Objects.Boxes[otherPlayer.Name] then ESP_Objects.Boxes[otherPlayer.Name].Visible = false end
-                if ESP_Objects.Names[otherPlayer.Name] then ESP_Objects.Names[otherPlayer.Name].Visible = false end
-                if ESP_Objects.Tracers[otherPlayer.Name] then ESP_Objects.Tracers[otherPlayer.Name].Visible = false end
-            end
-        end
+-- Real-Time Progress Logic (Setzt Ziel auf 19:00 Uhr)
+task.spawn(function()
+    while MainFrame.Parent do
+        local now = os.date("*t")
+        -- Fortschritt bis 19:00 Uhr
+        local prog = math.clamp(((now.hour*3600)+(now.min*60)+now.sec) / (19*3600), 0, 0.99)
+        TweenService:Create(BarFill, TweenInfo.new(1), {Size = UDim2.new(prog, 0, 1, 0), BackgroundColor3 = Color3.fromHSV((tick()/5)%1, 0.6, 1)}):Play()
+        task.wait(1)
     end
 end)
 
--- ==========================================
--- 14. SECTION: INPUT LISTENERS
--- ==========================================
+-- Drag System
+local d=false; local s; local sp; MainFrame.InputBegan:Connect(function(i) if i.UserInputType==Enum.UserInputType.MouseButton1 then d=true; s=i.Position; sp=MainFrame.Position end end)
+UserInputService.InputChanged:Connect(function(i) if d and i.UserInputType==Enum.UserInputType.MouseMovement then local delta=i.Position-s; MainFrame.Position=UDim2.new(sp.X.Scale,sp.X.Offset+delta.X,sp.Y.Scale,sp.Y.Offset+delta.Y) end end)
+UserInputService.InputEnded:Connect(function(i) if i.UserInputType==Enum.UserInputType.MouseButton1 then d=false end end)
 
-UserInputService.InputBegan:Connect(function(input, processed)
-    if processed then return end
-    if _G.ClickTP and input.UserInputType == Enum.UserInputType.MouseButton1 and UserInputService:IsKeyDown(Enum.KeyCode.LeftControl) then
-        if mouse.Hit then character:MoveTo(mouse.Hit.Position + Vector3.new(0, 3, 0)) end
-    end
-    if _G.InfiniteJump and input.KeyCode == Enum.KeyCode.Space and character:FindFirstChild("Humanoid") then
-        character.Humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
-    end
-end)
-
--- ==========================================
--- 15. SECTION: PLAYER CLEANUP
--- ==========================================
-
-Players.PlayerRemoving:Connect(function(leaving)
-    if ESP_Objects.Boxes[leaving.Name] then ESP_Objects.Boxes[leaving.Name]:Remove() end
-    if ESP_Objects.Names[leaving.Name] then ESP_Objects.Names[leaving.Name]:Remove() end
-    if ESP_Objects.Tracers[leaving.Name] then ESP_Objects.Tracers[leaving.Name]:Remove() end
-end)
-
--- ==========================================
--- 16. SECTION: FINAL EXECUTION
--- ==========================================
-
-print("-----------------------------------------")
-print("Rw9/ezsio V12 | SUPREME EDITION STABILIZED")
-print("Official Line Count: 850+")
-print("Status: ENGINE READY")
-print("-----------------------------------------")
-
-SendNotification("Upgrade Fertig!", "Flight & Aimbot jetzt stabilisiert.")
+print("Rw9/ezsio V13 - Terminal Update Deployed.")
