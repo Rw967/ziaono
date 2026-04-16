@@ -577,7 +577,7 @@ InfoTab:CreateSection("Community Links")
 InfoTab:CreateButton({
     Name = "Copy Discord Server Link",
     Callback = function()
-        setclipboard("https://discord.gg/uUPSfkhg")
+        setclipboard("https://discord.gg/NkrjsyzPUv")
         SendNotification("Copied", "Link in die Zwischenablage kopiert.")
     end
 })
