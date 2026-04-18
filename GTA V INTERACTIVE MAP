@@ -1,0 +1,116 @@
+local player = game.Players.LocalPlayer
+local mouse = player:GetMouse()
+local camera = workspace.CurrentCamera
+local uis = game:GetService("UserInputService")
+local rs = game:GetService("RunService")
+local ts = game:GetService("TweenService")
+
+local isMapOpen = false
+local spawnHeight = 1800 -- Perfekte Höhe: Man sieht die Map, aber es ist weit oben
+local currentHeight = spawnHeight
+local moveSpeed = 5
+local connection
+
+-- Start-Nachricht
+local function notify(title, text)
+    game:GetService("StarterGui"):SetCore("SendNotification", {
+        Title = title;
+        Text = text;
+        Icon = "rbxassetid://6034503042";
+        Duration = 7;
+    })
+end
+
+local function gtaFlash(duration)
+    local cc = Instance.new("ColorCorrectionEffect", camera)
+    cc.Brightness = 1
+    ts:Create(cc, TweenInfo.new(duration, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {Brightness = 0}):Play()
+    game:GetService("Debris"):AddItem(cc, duration)
+end
+
+-- Die 3-Boom Sequenz (Optimierte Abstände)
+local function startGtaSequence(targetPos)
+    isMapOpen = false
+    if connection then connection:Disconnect() end
+    
+    local char = player.Character
+    local hrp = char.HumanoidRootPart
+    local head = char:WaitForChild("Head")
+    
+    hrp.Anchored = false
+    hrp.CFrame = CFrame.new(targetPos + Vector3.new(0, 3, 0))
+
+    -- BOOM 1: Erster großer Fall (Warten: 3 Sek)
+    gtaFlash(1.5)
+    camera.CFrame = CFrame.new(targetPos + Vector3.new(0, 800, 10), targetPos)
+    task.wait(3)
+
+    -- BOOM 2: Halbe Höhe (Warten: 3 Sek)
+    gtaFlash(1.2)
+    camera.CFrame = CFrame.new(targetPos + Vector3.new(0, 300, 5), targetPos)
+    task.wait(3)
+
+    -- BOOM 3: Direkt überm Kopf (Warten: 2 Sek)
+    gtaFlash(1)
+    camera.CFrame = CFrame.new(head.Position + Vector3.new(0, 50, 0), head.Position)
+    task.wait(2)
+
+    -- FINALE: Schwenk hinter den Kopf (Clean & Original)
+    local finalCameraCF = CFrame.new(head.Position + (hrp.CFrame.LookVector * -12) + Vector3.new(0, 3, 0), head.Position + hrp.CFrame.LookVector * 5)
+    ts:Create(camera, TweenInfo.new(1.2, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {CFrame = finalCameraCF}):Play()
+    task.wait(1.2)
+
+    camera.CameraType = Enum.CameraType.Custom
+    notify("GTA V", "Charakter gewechselt.")
+end
+
+-- Map Steuerung (FIXED WASD)
+uis.InputBegan:Connect(function(input, processed)
+    if processed then return end
+    if input.KeyCode == Enum.KeyCode.M then
+        isMapOpen = not isMapOpen
+        if isMapOpen then
+            currentHeight = spawnHeight
+            player.Character.HumanoidRootPart.Anchored = true
+            camera.CameraType = Enum.CameraType.Scriptable
+            notify("Karten-Modus", "W-A-S-D: Bewegen | Mausrad: Zoom")
+            
+            connection = rs.RenderStepped:Connect(function()
+                local moveVec = Vector3.new(0,0,0)
+                -- Clean WASD
+                if uis:IsKeyDown(Enum.KeyCode.W) then moveVec = moveVec + Vector3.new(0, 0, -1) end
+                if uis:IsKeyDown(Enum.KeyCode.S) then moveVec = moveVec + Vector3.new(0, 0, 1) end
+                if uis:IsKeyDown(Enum.KeyCode.A) then moveVec = moveVec + Vector3.new(-1, 0, 0) end
+                if uis:IsKeyDown(Enum.KeyCode.D) then moveVec = moveVec + Vector3.new(1, 0, 0) end
+                
+                local currentPos = camera.CFrame.Position
+                local newPos = currentPos + (moveVec * moveSpeed)
+                camera.CFrame = CFrame.new(Vector3.new(newPos.X, currentHeight, newPos.Z)) * CFrame.Angles(math.rad(-90), 0, 0)
+            end)
+        else
+            if connection then connection:Disconnect() end
+            player.Character.HumanoidRootPart.Anchored = false
+            camera.CameraType = Enum.CameraType.Custom
+        end
+    end
+end)
+
+-- Zoom Logik (Limitiert auf SpawnHeight)
+uis.InputChanged:Connect(function(input)
+    if isMapOpen and input.UserInputType == Enum.UserInputType.MouseWheel then
+        if input.Position.Z > 0 then 
+            currentHeight = math.max(200, currentHeight - 200)
+        else 
+            currentHeight = math.min(spawnHeight, currentHeight + 200)
+        end
+    end
+end)
+
+mouse.Button1Down:Connect(function()
+    if isMapOpen then
+        startGtaSequence(mouse.Hit.Position)
+    end
+end)
+
+-- Die Start-Meldung
+notify("RW9 GTA V System", "Geladen! Drücke [ M ] für die Map.")
